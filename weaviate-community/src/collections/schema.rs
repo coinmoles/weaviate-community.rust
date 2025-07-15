@@ -431,6 +431,9 @@ pub struct Property {
     pub index_searchable: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
+    pub index_range_filters: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub inverted_index_config: Option<InvertedIndexConfig>,
 }
 
@@ -466,6 +469,7 @@ pub struct PropertyBuilder {
     pub module_config: Option<serde_json::Value>,
     pub index_filterable: Option<bool>,
     pub index_searchable: Option<bool>,
+    pub index_range_filters: Option<bool>,
     pub inverted_index_config: Option<InvertedIndexConfig>,
 }
 
@@ -496,6 +500,7 @@ impl PropertyBuilder {
             module_config: None,
             index_filterable: None,
             index_searchable: None,
+            index_range_filters: None,
             inverted_index_config: None,
         }
     }
@@ -548,10 +553,7 @@ impl PropertyBuilder {
     ///
     /// let builder = PropertyBuilder::new("title", vec!["text"]);
     /// ```
-    pub fn with_module_config(
-        mut self,
-        module_config: serde_json::Value,
-    ) -> PropertyBuilder {
+    pub fn with_module_config(mut self, module_config: serde_json::Value) -> PropertyBuilder {
         self.module_config = Some(module_config);
         self
     }
@@ -587,6 +589,23 @@ impl PropertyBuilder {
     /// ```
     pub fn with_index_searchable(mut self, index_searchable: bool) -> PropertyBuilder {
         self.index_searchable = Some(index_searchable);
+        self
+    }
+
+    /// Add a value to the optional `index_range_filters` value of the property.
+    ///
+    /// # Parameters
+    /// - index_range_filters: the index_range_filters to use for the property
+    ///
+    /// # Example
+    /// ```rust
+    /// use weaviate_community::collections::schema::PropertyBuilder;
+    ///
+    /// let builder = PropertyBuilder::new("title", vec!["text"])
+    ///     .with_index_range_filters(true);
+    /// ```
+    pub fn with_index_range_filters(mut self, index_range_filters: bool) -> PropertyBuilder {
+        self.index_range_filters = Some(index_range_filters);
         self
     }
 
@@ -636,6 +655,7 @@ impl PropertyBuilder {
             module_config: self.module_config,
             index_filterable: self.index_filterable,
             index_searchable: self.index_searchable,
+            index_range_filters: self.index_range_filters,
             inverted_index_config: self.inverted_index_config,
         }
     }
