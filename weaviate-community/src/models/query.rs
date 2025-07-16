@@ -413,16 +413,12 @@ impl AggregateBuilder {
 
     /// Check if the query contains a filter.
     fn contains_filter(&self) -> bool {
-        match self.where_clause.is_some()
+        self.where_clause.is_some()
             || self.group_by.is_some()
             || self.near.is_some()
             || self.object_limit.is_some()
             || self.tenant.is_some()
             || self.limit.is_some()
-        {
-            true => true,
-            false => false,
-        }
     }
 }
 
@@ -1118,7 +1114,7 @@ impl GetBuilder {
 
     /// Check if the query contains a filter.
     fn contains_filter(&self) -> bool {
-        match self.limit.is_some()
+        self.limit.is_some()
             || self.offset.is_some()
             || self.after.is_some()
             || self.autocut.is_some()
@@ -1132,10 +1128,6 @@ impl GetBuilder {
             || self.bm25.is_some()
             || self.sort.is_some()
             || self.ask.is_some()
-        {
-            true => true,
-            false => false,
-        }
     }
 }
 
