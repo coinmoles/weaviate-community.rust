@@ -1,5 +1,4 @@
-use hyper::StatusCode;
-use reqwest::Url;
+use reqwest::{StatusCode, Url};
 
 use crate::{
     error::WeaviateError,
@@ -99,7 +98,8 @@ impl<'a> Batch<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -165,7 +165,8 @@ impl<'a> Batch<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -262,7 +263,8 @@ impl<'a> Batch<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)

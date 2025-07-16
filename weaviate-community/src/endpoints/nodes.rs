@@ -1,5 +1,4 @@
-use hyper::StatusCode;
-use reqwest::Url;
+use reqwest::{StatusCode, Url};
 
 use crate::error::WeaviateError;
 use crate::models::nodes::MultiNodes;
@@ -48,7 +47,8 @@ impl<'a> Nodes<'a> {
             .get(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)

@@ -1,6 +1,5 @@
-use hyper::StatusCode;
 /// https://weaviate.io/developers/weaviate/api/rest/well-known
-use reqwest::Url;
+use reqwest::{StatusCode, Url};
 
 use crate::error::WeaviateError;
 use crate::models::oidc::OidcResponse;
@@ -45,7 +44,8 @@ impl<'a> Oidc<'a> {
             .get(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)

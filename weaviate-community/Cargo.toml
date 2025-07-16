@@ -21,7 +21,6 @@ serde_json = { version = "1" }
 serde = { version = "1.0", features = ["derive"] }
 uuid = { version = "1.4.1", features = ["v4", "serde"] }
 url = "2.5.4"
-hyper = "1.6.0"
 
 [dev-dependencies]
 mockito = "1.2.0"

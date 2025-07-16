@@ -1,5 +1,3 @@
-use hyper::ext::ReasonPhrase;
-
 /// Error for Weaviate operations.
 #[derive(Debug)]
 pub enum WeaviateError {
@@ -11,7 +9,7 @@ pub enum WeaviateError {
         url: reqwest::Url,
         expected: reqwest::StatusCode,
         actual: reqwest::StatusCode,
-        reason: Option<ReasonPhrase>,
+        reason: Option<String>,
     },
     BackupFailed,
 }

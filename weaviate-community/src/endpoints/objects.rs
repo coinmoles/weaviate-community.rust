@@ -1,5 +1,4 @@
-use hyper::StatusCode;
-use reqwest::Url;
+use reqwest::{StatusCode, Url};
 use uuid::Uuid;
 
 use crate::error::{QueryError, WeaviateError};
@@ -107,7 +106,8 @@ impl<'a> Objects<'a> {
             .get(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -160,7 +160,8 @@ impl<'a> Objects<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -219,7 +220,8 @@ impl<'a> Objects<'a> {
             .get(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -274,7 +276,8 @@ impl<'a> Objects<'a> {
             .head(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::NO_CONTENT)?;
+            .check_status(StatusCode::NO_CONTENT)
+            .await?;
         Ok(true)
     }
 
@@ -329,7 +332,8 @@ impl<'a> Objects<'a> {
             .json(&properties)
             .send()
             .await?
-            .check_status(StatusCode::NO_CONTENT)?;
+            .check_status(StatusCode::NO_CONTENT)
+            .await?;
         Ok(true)
     }
 
@@ -392,7 +396,8 @@ impl<'a> Objects<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -446,7 +451,8 @@ impl<'a> Objects<'a> {
             .delete(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::NO_CONTENT)?;
+            .check_status(StatusCode::NO_CONTENT)
+            .await?;
         Ok(true)
     }
 
@@ -492,7 +498,8 @@ impl<'a> Objects<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?;
+            .check_status(StatusCode::OK)
+            .await?;
         Ok(true)
     }
 
@@ -560,7 +567,8 @@ impl<'a> Objects<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?;
+            .check_status(StatusCode::OK)
+            .await?;
         Ok(true)
     }
 
@@ -646,7 +654,8 @@ impl<'a> Objects<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -716,7 +725,8 @@ impl<'a> Objects<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::NO_CONTENT)?;
+            .check_status(StatusCode::NO_CONTENT)
+            .await?;
         Ok(true)
     }
 }

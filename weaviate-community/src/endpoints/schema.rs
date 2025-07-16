@@ -1,5 +1,4 @@
-use hyper::StatusCode;
-use reqwest::Url;
+use reqwest::{StatusCode, Url};
 
 use crate::error::WeaviateError;
 use crate::models::schema::{
@@ -52,7 +51,8 @@ impl<'a> Schema<'a> {
             .get(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -79,7 +79,8 @@ impl<'a> Schema<'a> {
             .get(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -114,7 +115,8 @@ impl<'a> Schema<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -143,7 +145,8 @@ impl<'a> Schema<'a> {
             .delete(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::OK)?;
+            .check_status(StatusCode::OK)
+            .await?;
         Ok(true)
     }
 
@@ -169,7 +172,8 @@ impl<'a> Schema<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -193,7 +197,8 @@ impl<'a> Schema<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -210,7 +215,8 @@ impl<'a> Schema<'a> {
             .get(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(Shards { shards: res })
@@ -234,7 +240,8 @@ impl<'a> Schema<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?;
+            .check_status(StatusCode::OK)
+            .await?;
         Ok(Shard {
             name: shard_name.into(),
             status,
@@ -252,7 +259,8 @@ impl<'a> Schema<'a> {
             .get(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(Tenants { tenants: res })
@@ -275,7 +283,8 @@ impl<'a> Schema<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(Tenants { tenants: res })
@@ -298,7 +307,8 @@ impl<'a> Schema<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?;
+            .check_status(StatusCode::OK)
+            .await?;
         Ok(true)
     }
 
@@ -323,7 +333,8 @@ impl<'a> Schema<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(Tenants { tenants: res })

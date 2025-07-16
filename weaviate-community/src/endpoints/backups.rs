@@ -68,7 +68,8 @@ impl<'a> Backups<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
 
@@ -116,7 +117,8 @@ impl<'a> Backups<'a> {
             .get(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -163,7 +165,8 @@ impl<'a> Backups<'a> {
             .json(&payload)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         if wait_for_completion {

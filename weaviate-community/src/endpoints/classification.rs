@@ -1,4 +1,4 @@
-use hyper::StatusCode;
+use reqwest::StatusCode;
 use url::Url;
 use uuid::Uuid;
 
@@ -78,7 +78,8 @@ impl<'a> Classification<'a> {
             .json(&request)
             .send()
             .await?
-            .check_status(StatusCode::CREATED)?
+            .check_status(StatusCode::CREATED)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -107,7 +108,8 @@ impl<'a> Classification<'a> {
             .get(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)

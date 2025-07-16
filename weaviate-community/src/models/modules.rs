@@ -12,7 +12,7 @@ pub struct ContextionaryConcept {
     pub individual_words: Vec<IndividualWords>,
 }
 
-/// Forms part of the expected response format when received from 
+/// Forms part of the expected response format when received from
 /// /v1/modules/text2vec-contextionary/concepts/{} successfully.
 ///
 /// This shouldn't be something you create yourself, as it is returned by the appropriate
@@ -26,7 +26,7 @@ pub struct IndividualWords {
     pub concatenated_word: Option<ConcatenatedWord>,
 }
 
-/// Forms part of the expected response format when received from 
+/// Forms part of the expected response format when received from
 /// /v1/modules/text2vec-contextionary/concepts/{} successfully.
 ///
 /// This shouldn't be something you create yourself, as it is returned by the appropriate
@@ -38,7 +38,7 @@ pub struct ContextionaryConceptInfo {
     pub vector: Vec<f64>,
 }
 
-/// Forms part of the expected response format when received from 
+/// Forms part of the expected response format when received from
 /// /v1/modules/text2vec-contextionary/concepts/{} successfully.
 ///
 /// This shouldn't be something you create yourself, as it is returned by the appropriate
@@ -51,7 +51,7 @@ pub struct IndividualWord {
     pub word: String,
 }
 
-/// Forms part of the expected response format when received from 
+/// Forms part of the expected response format when received from
 /// /v1/modules/text2vec-contextionary/concepts/{} successfully.
 ///
 /// This shouldn't be something you create yourself, as it is returned by the appropriate
@@ -62,7 +62,7 @@ pub struct ConcatenatedWords {
     concatenated_word: ConcatenatedWord,
 }
 
-/// Forms part of the expected response format when received from 
+/// Forms part of the expected response format when received from
 /// /v1/modules/text2vec-contextionary/concepts/{} successfully.
 ///
 /// This shouldn't be something you create yourself, as it is returned by the appropriate
@@ -99,6 +99,10 @@ impl ContextionaryExtension {
     /// let ext = ContextionaryExtension::new("concept", "description", 1.0);
     /// ```
     pub fn new(concept: &str, definition: &str, weight: f64) -> ContextionaryExtension {
-        ContextionaryExtension { concept: concept.into(), definition: definition.into(), weight }
+        ContextionaryExtension {
+            concept: concept.into(),
+            definition: definition.into(),
+            weight,
+        }
     }
 }

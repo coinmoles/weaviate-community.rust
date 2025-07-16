@@ -1,5 +1,4 @@
-use hyper::StatusCode;
-use reqwest::Url;
+use reqwest::{StatusCode, Url};
 
 use crate::error::WeaviateError;
 use crate::models::modules::{ContextionaryConcept, ContextionaryExtension};
@@ -58,7 +57,8 @@ impl<'a> Modules<'a> {
             .get(endpoint)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
@@ -94,7 +94,8 @@ impl<'a> Modules<'a> {
             .json(&concept)
             .send()
             .await?
-            .check_status(StatusCode::OK)?
+            .check_status(StatusCode::OK)
+            .await?
             .json()
             .await?;
         Ok(res)
