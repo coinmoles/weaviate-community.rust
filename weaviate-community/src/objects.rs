@@ -51,7 +51,7 @@ impl Objects {
 
         // Add the query params when they are present
         if let Some(c) = &parameters.class_name {
-            endpoint.query_pairs_mut().append_pair("class", &c);
+            endpoint.query_pairs_mut().append_pair("class", c);
         }
         if let Some(l) = &parameters.limit {
             endpoint
@@ -70,7 +70,7 @@ impl Objects {
             }
         }
         if let Some(a) = &parameters.after {
-            endpoint.query_pairs_mut().append_pair("after", &a);
+            endpoint.query_pairs_mut().append_pair("after", a);
             if parameters.after.is_none() {
                 return Err(Box::new(QueryError(
                     "'class' must be Some when 'after' is Some".into(),
@@ -149,7 +149,7 @@ impl Objects {
                 .query_pairs_mut()
                 .append_pair("consistency_level", x.value());
         }
-        let payload = serde_json::to_value(&new_object)?;
+        let payload = serde_json::to_value(new_object)?;
 
         let res = self.client.post(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -198,7 +198,7 @@ impl Objects {
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         if let Some(t) = tenant_key {
             // multi tenancy must be enabled first
@@ -256,7 +256,7 @@ impl Objects {
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         if let Some(t) = tenant_name {
             // multi tenancy must be enabled first
@@ -313,7 +313,7 @@ impl Objects {
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         let res = self.client.patch(endpoint).json(&properties).send().await?;
         match res.status() {
@@ -367,7 +367,7 @@ impl Objects {
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         let payload = serde_json::json!({
             "class": class_name,
@@ -421,7 +421,7 @@ impl Objects {
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         if let Some(t) = tenant_name {
             // multi tenancy must be enabled first
@@ -506,10 +506,10 @@ impl Objects {
     ///
     ///     let reference = Reference::new(
     ///         "JeopardyQuestion",
-    ///         &uuid1,
+    ///         uuid1,
     ///         "hasCategory",
     ///         "JeopardyCategory",
-    ///         &uuid2,
+    ///         uuid2,
     ///     );
     ///
     ///     let res = client.objects.reference_add(reference).await;
@@ -526,7 +526,7 @@ impl Objects {
         if let Some(cl) = reference.consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         if let Some(t) = reference.tenant_name {
             // multi tenancy must be enabled first
@@ -602,7 +602,7 @@ impl Objects {
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         if let Some(t) = tenant_name {
             // multi tenancy must be enabled first
@@ -655,10 +655,10 @@ impl Objects {
     ///
     ///     let reference = Reference::new(
     ///         "JeopardyQuestion",
-    ///         &uuid1,
+    ///         uuid1,
     ///         "hasCategory",
     ///         "JeopardyCategory",
-    ///         &uuid2,
+    ///         uuid2,
     ///     );
     ///
     ///     let res = client.objects.reference_delete(reference).await;
@@ -675,7 +675,7 @@ impl Objects {
         if let Some(cl) = reference.consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         if let Some(t) = reference.tenant_name {
             // multi tenancy must be enabled first
@@ -729,7 +729,7 @@ mod tests {
         MultiObjects::new(vec![test_object(class_name), test_object(class_name)])
     }
 
-    fn test_reference(uuid: &Uuid, uuid_2: &Uuid) -> Reference {
+    fn test_reference(uuid: Uuid, uuid_2: Uuid) -> Reference {
         Reference::new("Test", uuid, "testProperty", "TestTwo", uuid_2)
     }
 
@@ -1040,7 +1040,7 @@ mod tests {
         let mock = mock_post(&mut mock_server, &url, 200, "").await;
         let res = client
             .objects
-            .reference_add(test_reference(&uuid, &uuid_2))
+            .reference_add(test_reference(uuid, uuid_2))
             .await;
         mock.assert();
         assert!(res.is_ok());
@@ -1058,7 +1058,7 @@ mod tests {
         let mock = mock_post(&mut mock_server, &url, 404, "").await;
         let res = client
             .objects
-            .reference_add(test_reference(&uuid, &uuid_2))
+            .reference_add(test_reference(uuid, uuid_2))
             .await;
         mock.assert();
         assert!(res.is_err());
@@ -1127,7 +1127,7 @@ mod tests {
         let mock = mock_delete(&mut mock_server, &url, 204).await;
         let res = client
             .objects
-            .reference_delete(test_reference(&uuid, &uuid_2))
+            .reference_delete(test_reference(uuid, uuid_2))
             .await;
         mock.assert();
         assert!(res.is_ok());
@@ -1145,7 +1145,7 @@ mod tests {
         let mock = mock_delete(&mut mock_server, &url, 404).await;
         let res = client
             .objects
-            .reference_delete(test_reference(&uuid, &uuid_2))
+            .reference_delete(test_reference(uuid, uuid_2))
             .await;
         mock.assert();
         assert!(res.is_err());

@@ -44,7 +44,7 @@ impl Schema {
             reqwest::StatusCode::OK => {
                 let res: Class = res.json().await?;
                 Ok(res)
-            },
+            }
             _ => Err(self.get_err_msg("get class", res).await),
         }
     }
@@ -95,7 +95,7 @@ impl Schema {
     /// }
     /// ```
     pub async fn create_class(&self, class: &Class) -> Result<Class, Box<dyn Error>> {
-        let payload = serde_json::to_value(&class).unwrap();
+        let payload = serde_json::to_value(class).unwrap();
         let res = self
             .client
             .post(self.endpoint.clone())
@@ -151,7 +151,7 @@ impl Schema {
     /// You should attach a body to this PUT request with the entire new configuration of the class
     pub async fn update(&self, class: &Class) -> Result<Class, Box<dyn Error>> {
         let endpoint = self.endpoint.join(&class.class)?;
-        let payload = serde_json::to_value(&class)?;
+        let payload = serde_json::to_value(class)?;
         let res = self.client.put(endpoint).json(&payload).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
@@ -173,7 +173,7 @@ impl Schema {
         let mut endpoint = class_name.to_string();
         endpoint.push_str("/properties");
         let endpoint = self.endpoint.join(&endpoint)?;
-        let payload = serde_json::to_value(&property)?;
+        let payload = serde_json::to_value(property)?;
         let res = self.client.post(endpoint).json(&payload).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
@@ -272,7 +272,7 @@ impl Schema {
     ) -> Result<bool, Box<dyn Error>> {
         let path = format!("{class_name}/tenants");
         let endpoint = self.endpoint.join(&path)?;
-        let payload = serde_json::to_value(&tenants)?;
+        let payload = serde_json::to_value(tenants)?;
         let res = self.client.delete(endpoint).json(&payload).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => Ok(true),
@@ -599,7 +599,8 @@ mod tests {
             "/v1/schema/Test/shards/abcd",
             200,
             &shard_str,
-        ).await;
+        )
+        .await;
         let res = client
             .schema
             .update_class_shard("Test", "abcd", ShardStatus::READONLY)

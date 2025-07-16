@@ -187,17 +187,17 @@ impl Batch {
     ///     let references = References::new(vec![
     ///         Reference::new(
     ///             "Author",
-    ///             &author_uuid,
+    ///             author_uuid,
     ///             "wroteArticles",
     ///             "Article",
-    ///             &article_a_uuid,
+    ///             article_a_uuid,
     ///         ),
     ///         Reference::new(
     ///             "Author",
-    ///             &author_uuid,
+    ///             author_uuid,
     ///             "wroteArticles",
     ///             "Article",
-    ///             &article_b_uuid,
+    ///             article_b_uuid,
     ///         ),
     ///     ]);
     ///
@@ -239,7 +239,7 @@ impl Batch {
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
 
         if let Some(t) = tenant {
@@ -360,8 +360,8 @@ mod tests {
         let uuid2 = Uuid::parse_str("6bb06a43-e7f0-393e-9ecf-3c0f4e129064").unwrap();
         let uuid3 = Uuid::parse_str("b72912b9-e5d7-304e-a654-66dc63c55b32").unwrap();
         References::new(vec![
-            Reference::new("Test", &uuid, "testProp", "Other", &uuid2),
-            Reference::new("Test", &uuid, "testProp", "Other", &uuid3),
+            Reference::new("Test", uuid, "testProp", "Other", uuid2),
+            Reference::new("Test", uuid, "testProp", "Other", uuid3),
         ])
     }
 

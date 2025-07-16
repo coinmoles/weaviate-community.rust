@@ -39,7 +39,7 @@ impl Backups {
     ///         exclude: None
     ///     };
     ///     let res = client.backups.create(
-    ///         &BackupBackends::FILESYSTEM,
+    ///         BackupBackends::FILESYSTEM,
     ///         &my_request,
     ///         true
     ///     ).await?;
@@ -49,12 +49,12 @@ impl Backups {
     /// ```
     pub async fn create(
         &self,
-        backend: &BackupBackends,
+        backend: BackupBackends,
         backup_request: &BackupCreateRequest,
         wait_for_completion: bool,
     ) -> Result<BackupResponse, Box<dyn Error>> {
         let endpoint = self.endpoint.join(backend.value())?;
-        let payload = serde_json::to_value(&backup_request)?;
+        let payload = serde_json::to_value(backup_request)?;
         let res = self.client.post(endpoint).json(&payload).send().await?;
 
         match res.status() {
@@ -62,7 +62,7 @@ impl Backups {
                 let mut res: BackupResponse = res.json().await?;
                 if wait_for_completion {
                     let complete = self
-                        .wait_for_completion(&backend, &backup_request.id, false)
+                        .wait_for_completion(backend, &backup_request.id, false)
                         .await?;
                     res.status = complete;
                 }
@@ -86,7 +86,7 @@ impl Backups {
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
     ///     let res = client.backups.get_backup_status(
-    ///         &BackupBackends::FILESYSTEM,
+    ///         BackupBackends::FILESYSTEM,
     ///         "doc-test-backup",
     ///         true
     ///     ).await?;
@@ -96,7 +96,7 @@ impl Backups {
     /// ```
     pub async fn get_backup_status(
         &self,
-        backend: &BackupBackends,
+        backend: BackupBackends,
         backup_id: &str,
         restore: bool,
     ) -> Result<BackupStatusResponse, Box<dyn Error>> {
@@ -134,7 +134,7 @@ impl Backups {
     ///         exclude: None
     ///     };
     ///     let res = client.backups.restore(
-    ///         &BackupBackends::FILESYSTEM,
+    ///         BackupBackends::FILESYSTEM,
     ///         "doc-test-backup",
     ///         &my_request,
     ///         true
@@ -145,21 +145,21 @@ impl Backups {
     /// ```
     pub async fn restore(
         &self,
-        backend: &BackupBackends,
+        backend: BackupBackends,
         backup_id: &str,
         backup_request: &BackupRestoreRequest,
         wait_for_completion: bool,
     ) -> Result<BackupResponse, Box<dyn Error>> {
         let path = format!("{}/{}/restore", backend.value(), backup_id);
         let endpoint = self.endpoint.join(&path)?;
-        let payload = serde_json::to_value(&backup_request)?;
+        let payload = serde_json::to_value(backup_request)?;
         let res = self.client.post(endpoint).json(&payload).send().await?;
 
         match res.status() {
             reqwest::StatusCode::OK => {
                 let mut res: BackupResponse = res.json().await?;
                 if wait_for_completion {
-                    let complete = self.wait_for_completion(&backend, &backup_id, true).await?;
+                    let complete = self.wait_for_completion(backend, backup_id, true).await?;
                     res.status = complete;
                 }
                 Ok(res)
@@ -174,7 +174,7 @@ impl Backups {
     /// Wait for a backup to complete before returning
     async fn wait_for_completion(
         &self,
-        backend: &BackupBackends,
+        backend: BackupBackends,
         backup_id: &str,
         restore: bool,
     ) -> Result<BackupStatus, Box<dyn Error>> {
@@ -276,7 +276,7 @@ mod tests {
         .await;
         let res = client
             .backups
-            .get_backup_status(&BackupBackends::FILESYSTEM, "abcd", false)
+            .get_backup_status(BackupBackends::FILESYSTEM, "abcd", false)
             .await;
         mock.assert();
         assert!(res.is_ok());
@@ -288,7 +288,7 @@ mod tests {
         let mock = mock_get(&mut mock_server, "/v1/backups/filesystem/abcd", 404, "").await;
         let res = client
             .backups
-            .get_backup_status(&BackupBackends::FILESYSTEM, "abcd", false)
+            .get_backup_status(BackupBackends::FILESYSTEM, "abcd", false)
             .await;
         mock.assert();
         assert!(res.is_err());
@@ -303,7 +303,7 @@ mod tests {
         let mock = mock_post(&mut mock_server, "/v1/backups/filesystem", 200, &out_str).await;
         let res = client
             .backups
-            .create(&BackupBackends::FILESYSTEM, &req, false)
+            .create(BackupBackends::FILESYSTEM, &req, false)
             .await;
         mock.assert();
         assert!(res.is_ok());
@@ -317,7 +317,7 @@ mod tests {
         let mock = mock_post(&mut mock_server, "/v1/backups/filesystem", 404, "").await;
         let res = client
             .backups
-            .create(&BackupBackends::FILESYSTEM, &req, false)
+            .create(BackupBackends::FILESYSTEM, &req, false)
             .await;
         mock.assert();
         assert!(res.is_err());
@@ -341,7 +341,7 @@ mod tests {
         .await;
         let res = client
             .backups
-            .create(&BackupBackends::FILESYSTEM, &req, true)
+            .create(BackupBackends::FILESYSTEM, &req, true)
             .await;
         mock.assert();
         mock2.assert();
@@ -356,7 +356,7 @@ mod tests {
         let mock = mock_post(&mut mock_server, "/v1/backups/filesystem", 404, "").await;
         let res = client
             .backups
-            .create(&BackupBackends::FILESYSTEM, &req, true)
+            .create(BackupBackends::FILESYSTEM, &req, true)
             .await;
         mock.assert();
         assert!(res.is_err());
@@ -377,7 +377,7 @@ mod tests {
         .await;
         let res = client
             .backups
-            .restore(&BackupBackends::FILESYSTEM, "abcd", &req, false)
+            .restore(BackupBackends::FILESYSTEM, "abcd", &req, false)
             .await;
         mock.assert();
         assert!(res.is_ok());
@@ -397,7 +397,7 @@ mod tests {
         .await;
         let res = client
             .backups
-            .restore(&BackupBackends::FILESYSTEM, "abcd", &req, false)
+            .restore(BackupBackends::FILESYSTEM, "abcd", &req, false)
             .await;
         mock.assert();
         assert!(res.is_err());
@@ -427,7 +427,7 @@ mod tests {
         .await;
         let res = client
             .backups
-            .restore(&BackupBackends::FILESYSTEM, "abcd", &req, true)
+            .restore(BackupBackends::FILESYSTEM, "abcd", &req, true)
             .await;
         mock.assert();
         mock2.assert();
@@ -448,7 +448,7 @@ mod tests {
         .await;
         let res = client
             .backups
-            .restore(&BackupBackends::FILESYSTEM, "abcd", &req, true)
+            .restore(BackupBackends::FILESYSTEM, "abcd", &req, true)
             .await;
         mock.assert();
         assert!(res.is_err());
