@@ -83,6 +83,10 @@ impl WeaviateClient {
         api_keys: Option<Vec<ApiKey>>,
     ) -> Result<Self, Box<dyn Error>> {
         let base_url = Url::parse(url)?;
+        if base_url.cannot_be_a_base() {
+            return Err(format!("The provided URL '{url}' cannot be used as a base URL.").into());
+        }
+
         let mut client_builder = reqwest::Client::builder();
 
         let mut headers = HeaderMap::new();
