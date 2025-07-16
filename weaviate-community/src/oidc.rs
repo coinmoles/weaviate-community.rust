@@ -1,21 +1,29 @@
 /// https://weaviate.io/developers/weaviate/api/rest/well-known
 use reqwest::Url;
 use std::error::Error;
-use std::sync::Arc;
 
 use crate::collections::error::NotConfiguredError;
 use crate::collections::oidc::OidcResponse;
+use crate::WeaviateClient;
 
 #[derive(Debug)]
-pub struct Oidc {
-    endpoint: Url,
-    client: Arc<reqwest::Client>,
+pub struct Oidc<'a> {
+    client: &'a WeaviateClient,
 }
 
-impl Oidc {
-    pub(super) fn new(url: &Url, client: Arc<reqwest::Client>) -> Result<Self, Box<dyn Error>> {
-        let endpoint = url.join("/v1/.well-known")?;
-        Ok(Oidc { endpoint, client })
+impl<'a> Oidc<'a> {
+    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+        Oidc { client }
+    }
+
+    /// Get the endpoint for oidc
+    ///
+    /// # Returns
+    /// A `Result` containing the URL for the oidc endpoint or a `ParseError` if the URL is invalid.
+    ///
+    /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
+    fn endpoint(&self) -> Result<Url, url::ParseError> {
+        self.client.base_url.join("/v1/.well-known/")
     }
 
     /// Get OIDC information if OpenID Connect (OIDC) authentication is enabled. The endpoint
@@ -31,7 +39,7 @@ impl Oidc {
     /// ```
     /// ```
     pub async fn get_open_id_configuration(&self) -> Result<OidcResponse, Box<dyn Error>> {
-        let endpoint = self.endpoint.join("/openid-configuration")?;
+        let endpoint = self.endpoint()?.join("/openid-configuration")?;
         let resp = self.client.get(endpoint).send().await?;
         match resp.status() {
             reqwest::StatusCode::OK => {
@@ -87,7 +95,7 @@ mod tests {
         let resp_str = serde_json::to_string(&resp).unwrap();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/openid-configuration", 200, &resp_str).await;
-        let res = client.oidc.get_open_id_configuration().await;
+        let res = client.oidc().get_open_id_configuration().await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(resp.client_id, res.unwrap().client_id);
@@ -97,7 +105,7 @@ mod tests {
     async fn test_get_open_id_configuration_err() {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/openid-configuration", 404, "").await;
-        let res = client.oidc.get_open_id_configuration().await;
+        let res = client.oidc().get_open_id_configuration().await;
         mock.assert();
         assert!(res.is_err());
     }

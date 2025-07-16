@@ -1,25 +1,37 @@
 use reqwest::Url;
 use std::error::Error;
-use std::sync::Arc;
 
-use crate::collections::{
-    batch::{BatchAddObjects, BatchAddReferencesResponse, BatchDeleteRequest, BatchDeleteResponse},
-    error::BatchError,
-    objects::{ConsistencyLevel, MultiObjects, References},
+use crate::{
+    collections::{
+        batch::{
+            BatchAddObjects, BatchAddReferencesResponse, BatchDeleteRequest, BatchDeleteResponse,
+        },
+        error::BatchError,
+        objects::{ConsistencyLevel, MultiObjects, References},
+    },
+    WeaviateClient,
 };
 
 /// All batch related endpoints and functionality described in
 /// [Weaviate meta API documentation](https://weaviate.io/developers/weaviate/api/rest/batch)
 #[derive(Debug)]
-pub struct Batch {
-    endpoint: Url,
-    client: Arc<reqwest::Client>,
+pub struct Batch<'a> {
+    client: &'a WeaviateClient,
 }
 
-impl Batch {
-    pub(super) fn new(url: &Url, client: Arc<reqwest::Client>) -> Result<Self, Box<dyn Error>> {
-        let endpoint = url.join("/v1/batch/")?;
-        Ok(Batch { endpoint, client })
+impl<'a> Batch<'a> {
+    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+        Batch { client }
+    }
+
+    /// Get the endpoint for batch operations
+    ///
+    /// # Returns
+    /// A `Result` containing the URL for the batch operation endpoint or a `ParseError` if the URL is invalid.
+    ///
+    /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
+    fn endpoint(&self) -> Result<Url, url::ParseError> {
+        self.client.base_url.join("/v1/batch/")
     }
 
     /// Batch add objects.
@@ -54,7 +66,7 @@ impl Batch {
     ///         .with_id(author_uuid.clone())
     ///         .build();
     ///
-    ///     let res = client.batch.objects_batch_add(
+    ///     let res = client.batch().objects_batch_add(
     ///         MultiObjects::new(vec![article_a, article_b, author]),
     ///         Some(ConsistencyLevel::ALL),
     ///         None
@@ -69,7 +81,7 @@ impl Batch {
         consistency_level: Option<ConsistencyLevel>,
         tenant: Option<&str>,
     ) -> Result<BatchAddObjects, Box<dyn Error>> {
-        let mut endpoint = self.endpoint.join("objects")?;
+        let mut endpoint = self.endpoint()?.join("objects")?;
         if let Some(x) = consistency_level {
             endpoint
                 .query_pairs_mut()
@@ -121,7 +133,7 @@ impl Batch {
     ///         )
     ///     ).build();
     ///
-    ///     let res = client.batch.objects_batch_delete(
+    ///     let res = client.batch().objects_batch_delete(
     ///         req,
     ///         Some(ConsistencyLevel::ALL),
     ///         None
@@ -136,7 +148,7 @@ impl Batch {
         consistency_level: Option<ConsistencyLevel>,
         tenant: Option<&str>,
     ) -> Result<BatchDeleteResponse, Box<dyn Error>> {
-        let mut endpoint = self.endpoint.join("objects")?;
+        let mut endpoint = self.endpoint()?.join("objects")?;
         if let Some(x) = consistency_level {
             endpoint
                 .query_pairs_mut()
@@ -187,21 +199,21 @@ impl Batch {
     ///     let references = References::new(vec![
     ///         Reference::new(
     ///             "Author",
-    ///             &author_uuid,
+    ///             author_uuid,
     ///             "wroteArticles",
     ///             "Article",
-    ///             &article_a_uuid,
+    ///             article_a_uuid,
     ///         ),
     ///         Reference::new(
     ///             "Author",
-    ///             &author_uuid,
+    ///             author_uuid,
     ///             "wroteArticles",
     ///             "Article",
-    ///             &article_b_uuid,
+    ///             article_b_uuid,
     ///         ),
     ///     ]);
     ///
-    ///     let res = client.batch.references_batch_add(
+    ///     let res = client.batch().references_batch_add(
     ///         references,
     ///         Some(ConsistencyLevel::ALL),
     ///         None
@@ -235,11 +247,11 @@ impl Batch {
         }
         let payload = serde_json::json!(converted);
 
-        let mut endpoint = self.endpoint.join("references")?;
+        let mut endpoint = self.endpoint()?.join("references")?;
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
 
         if let Some(t) = tenant {
@@ -299,7 +311,7 @@ mod tests {
                 creation_time_unix: None,
                 last_update_time_unix: None,
                 vector_weights: None,
-                additional: None
+                additional: None,
             }],
         }
     }
@@ -360,8 +372,8 @@ mod tests {
         let uuid2 = Uuid::parse_str("6bb06a43-e7f0-393e-9ecf-3c0f4e129064").unwrap();
         let uuid3 = Uuid::parse_str("b72912b9-e5d7-304e-a654-66dc63c55b32").unwrap();
         References::new(vec![
-            Reference::new("Test", &uuid, "testProp", "Other", &uuid2),
-            Reference::new("Test", &uuid, "testProp", "Other", &uuid3),
+            Reference::new("Test", uuid, "testProp", "Other", uuid2),
+            Reference::new("Test", uuid, "testProp", "Other", uuid3),
         ])
     }
 
@@ -415,7 +427,7 @@ mod tests {
         let res_str = test_batch_add_object_response();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/batch/objects", 200, &res_str).await;
-        let res = client.batch.objects_batch_add(objects, None, None).await;
+        let res = client.batch().objects_batch_add(objects, None, None).await;
         mock.assert();
         assert!(res.is_ok());
     }
@@ -425,7 +437,7 @@ mod tests {
         let objects = test_create_objects();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/batch/objects", 404, "").await;
-        let res = client.batch.objects_batch_add(objects, None, None).await;
+        let res = client.batch().objects_batch_add(objects, None, None).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -437,7 +449,7 @@ mod tests {
         let res_str = serde_json::to_string(&out).unwrap();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_delete(&mut mock_server, "/v1/batch/objects", 200, &res_str).await;
-        let res = client.batch.objects_batch_delete(req, None, None).await;
+        let res = client.batch().objects_batch_delete(req, None, None).await;
         mock.assert();
         assert!(res.is_ok());
     }
@@ -447,7 +459,7 @@ mod tests {
         let req = test_delete_objects();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_delete(&mut mock_server, "/v1/batch/objects", 401, "").await;
-        let res = client.batch.objects_batch_delete(req, None, None).await;
+        let res = client.batch().objects_batch_delete(req, None, None).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -458,7 +470,7 @@ mod tests {
         let res_str = test_add_references_response();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/batch/references", 200, &res_str).await;
-        let res = client.batch.references_batch_add(refs, None, None).await;
+        let res = client.batch().references_batch_add(refs, None, None).await;
         mock.assert();
         assert!(res.is_ok());
     }
@@ -468,7 +480,7 @@ mod tests {
         let refs = test_references();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/batch/references", 500, "").await;
-        let res = client.batch.references_batch_add(refs, None, None).await;
+        let res = client.batch().references_batch_add(refs, None, None).await;
         mock.assert();
         assert!(res.is_err());
     }

@@ -211,7 +211,7 @@ impl ObjectBuilder {
             creation_time_unix: self.creation_time_unix,
             last_update_time_unix: self.last_update_time_unix,
             vector_weights: self.vector_weights,
-            additional: None
+            additional: None,
         }
     }
 }
@@ -423,6 +423,7 @@ impl ObjectListParametersBuilder {
     /// - classification
     /// - vector
     /// - featureProjection
+    ///
     /// and other module specific additional properties.
     ///
     /// # Parameters
@@ -518,12 +519,12 @@ impl References {
     ///
     /// let reference = Reference::new(
     ///     "JeopardyQuestion",
-    ///     &uuid1,
+    ///     uuid1,
     ///     "hasCategory",
     ///     "JeopardyCategory",
-    ///     &uuid2,
+    ///     uuid2,
     /// );
-
+    ///
     /// let references = References::new(
     ///    vec![reference]
     /// );
@@ -557,25 +558,25 @@ impl Reference {
     ///
     /// let reference = Reference::new(
     ///     "JeopardyQuestion",
-    ///     &uuid1,
+    ///     uuid1,
     ///     "hasCategory",
     ///     "JeopardyCategory",
-    ///     &uuid2,
+    ///     uuid2,
     /// );
     /// ```
     pub fn new(
         from_class_name: &str,
-        from_uuid: &Uuid,
+        from_uuid: Uuid,
         from_property_name: &str,
         to_class_name: &str,
-        to_uuid: &Uuid,
+        to_uuid: Uuid,
     ) -> Reference {
         Reference {
             from_class_name: from_class_name.into(),
-            from_uuid: from_uuid.clone(),
+            from_uuid,
             from_property_name: from_property_name.into(),
             to_class_name: to_class_name.into(),
-            to_uuid: to_uuid.clone(),
+            to_uuid,
             consistency_level: None,
             tenant_name: None,
         }
@@ -595,18 +596,18 @@ impl Reference {
     ///
     /// let reference = Reference::new(
     ///     "JeopardyQuestion",
-    ///     &uuid1,
+    ///     uuid1,
     ///     "hasCategory",
     ///     "JeopardyCategory",
-    ///     &uuid2,
+    ///     uuid2,
     /// );
     /// ```
     pub fn builder(
         from_class_name: &str,
-        from_uuid: &Uuid,
+        from_uuid: Uuid,
         from_property_name: &str,
         to_class_name: &str,
-        to_uuid: &Uuid,
+        to_uuid: Uuid,
     ) -> ReferenceBuilder {
         ReferenceBuilder::new(
             from_class_name,
@@ -644,25 +645,25 @@ impl ReferenceBuilder {
     ///
     /// let reference = ReferenceBuilder::new(
     ///     "JeopardyQuestion",
-    ///     &uuid1,
+    ///     uuid1,
     ///     "hasCategory",
     ///     "JeopardyCategory",
-    ///     &uuid2,
+    ///     uuid2,
     /// );
     /// ```
     pub fn new(
         from_class_name: &str,
-        from_uuid: &Uuid,
+        from_uuid: Uuid,
         from_property_name: &str,
         to_class_name: &str,
-        to_uuid: &Uuid,
+        to_uuid: Uuid,
     ) -> ReferenceBuilder {
         ReferenceBuilder {
             from_class_name: from_class_name.into(),
-            from_uuid: from_uuid.clone(),
+            from_uuid,
             from_property_name: from_property_name.into(),
             to_class_name: to_class_name.into(),
-            to_uuid: to_uuid.clone(),
+            to_uuid,
             consistency_level: None,
             tenant_name: None,
         }
@@ -683,10 +684,10 @@ impl ReferenceBuilder {
     /// let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();
     /// let reference = ReferenceBuilder::new(
     ///     "JeopardyQuestion",
-    ///     &uuid1,
+    ///     uuid1,
     ///     "hasCategory",
     ///     "JeopardyCategory",
-    ///     &uuid2,
+    ///     uuid2,
     /// ).with_consistency_level(ConsistencyLevel::ALL).build();
     /// ```
     pub fn with_consistency_level(
@@ -711,10 +712,10 @@ impl ReferenceBuilder {
     /// let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();
     /// let reference = ReferenceBuilder::new(
     ///     "JeopardyQuestion",
-    ///     &uuid1,
+    ///     uuid1,
     ///     "hasCategory",
     ///     "JeopardyCategory",
-    ///     &uuid2,
+    ///     uuid2,
     /// ).with_tenant_name("TENANT_A").build();
     /// ```
     pub fn with_tenant_name(mut self, tenant_name: &str) -> ReferenceBuilder {
@@ -734,10 +735,10 @@ impl ReferenceBuilder {
     /// let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();
     /// let reference = ReferenceBuilder::new(
     ///     "JeopardyQuestion",
-    ///     &uuid1,
+    ///     uuid1,
     ///     "hasCategory",
     ///     "JeopardyCategory",
-    ///     &uuid2,
+    ///     uuid2,
     /// ).build();
     /// ```
     ///
@@ -750,10 +751,10 @@ impl ReferenceBuilder {
     /// let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();
     /// let reference = Reference::builder(
     ///     "JeopardyQuestion",
-    ///     &uuid1,
+    ///     uuid1,
     ///     "hasCategory",
     ///     "JeopardyCategory",
-    ///     &uuid2,
+    ///     uuid2,
     /// ).build();
     ///
     /// ```

@@ -2,25 +2,34 @@ use crate::collections::error::QueryError;
 use crate::collections::objects::{
     ConsistencyLevel, MultiObjects, Object, ObjectListParameters, Reference,
 };
+use crate::WeaviateClient;
 use reqwest::Url;
-use std::{error::Error, sync::Arc};
+use std::error::Error;
 use uuid::Uuid;
 
 /// All objects endpoints and functionality described in
 /// [Weaviate objects API documentation](https://weaviate.io/developers/weaviate/api/rest/objects)
 #[derive(Debug)]
-pub struct Objects {
-    endpoint: Url,
-    client: Arc<reqwest::Client>,
+pub struct Objects<'a> {
+    client: &'a WeaviateClient,
 }
 
-impl Objects {
+impl<'a> Objects<'a> {
     /// Create a new Objects endpoint orchestrator for the client.
     ///
     /// Should not be done manually.
-    pub(super) fn new(url: &Url, client: Arc<reqwest::Client>) -> Result<Self, Box<dyn Error>> {
-        let endpoint = url.join("/v1/objects/")?;
-        Ok(Objects { endpoint, client })
+    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+        Objects { client }
+    }
+
+    /// Get the endpoint for objects
+    ///
+    /// # Returns
+    /// A `Result` containing the URL for the objects endpoint or a `ParseError` if the URL is invalid.
+    ///
+    /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
+    fn endpoint(&self) -> Result<Url, url::ParseError> {
+        self.client.base_url.join("/v1/objects/")
     }
 
     /// List the data objects.
@@ -39,7 +48,7 @@ impl Objects {
     ///
     ///     //let params = ObjectListParameters::builder().with_class_name("MyClass").build();
     ///     let params = ObjectListParameters::new();
-    ///     let res = client.objects.list(params).await?;
+    ///     let res = client.objects().list(params).await?;
     ///     Ok(())
     /// }
     /// ```
@@ -47,11 +56,11 @@ impl Objects {
         &self,
         parameters: ObjectListParameters,
     ) -> Result<MultiObjects, Box<dyn Error>> {
-        let mut endpoint = self.endpoint.clone();
+        let mut endpoint = self.endpoint()?;
 
         // Add the query params when they are present
         if let Some(c) = &parameters.class_name {
-            endpoint.query_pairs_mut().append_pair("class", &c);
+            endpoint.query_pairs_mut().append_pair("class", c);
         }
         if let Some(l) = &parameters.limit {
             endpoint
@@ -70,7 +79,7 @@ impl Objects {
             }
         }
         if let Some(a) = &parameters.after {
-            endpoint.query_pairs_mut().append_pair("after", &a);
+            endpoint.query_pairs_mut().append_pair("after", a);
             if parameters.after.is_none() {
                 return Err(Box::new(QueryError(
                     "'class' must be Some when 'after' is Some".into(),
@@ -131,10 +140,10 @@ impl Objects {
     ///         "name": "Jodi Kantor",
     ///     });
     ///     let new = Object::builder("Publication", properties).build();
-    ///     let res = client.objects.create(
+    ///     let res = client.objects().create(
     ///         &new,
     ///         None
-    ///     );
+    ///     ).await;
     ///     Ok(())
     /// }
     /// ```
@@ -143,13 +152,13 @@ impl Objects {
         new_object: &Object,
         consistency_level: Option<ConsistencyLevel>,
     ) -> Result<Object, Box<dyn Error>> {
-        let mut endpoint = self.endpoint.clone();
+        let mut endpoint = self.endpoint()?;
         if let Some(x) = consistency_level {
             endpoint
                 .query_pairs_mut()
                 .append_pair("consistency_level", x.value());
         }
-        let payload = serde_json::to_value(&new_object)?;
+        let payload = serde_json::to_value(new_object)?;
 
         let res = self.client.post(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -157,7 +166,7 @@ impl Objects {
                 let res: Object = res.json().await?;
                 Ok(res)
             }
-            _ => Err(self.get_err_msg("create object", res).await)
+            _ => Err(self.get_err_msg("create object", res).await),
         }
     }
 
@@ -180,7 +189,7 @@ impl Objects {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
     ///     let uuid = Uuid::parse_str("ee22d1b8-3b95-4e94-96d5-9a2b60fbd303").unwrap();
     ///     let res = client
-    ///         .objects
+    ///         .objects()
     ///         .get("TestListObject", &uuid, None, None, None).await;
     ///     Ok(())
     /// }
@@ -193,14 +202,12 @@ impl Objects {
         consistency_level: Option<ConsistencyLevel>,
         tenant_key: Option<&str>,
     ) -> Result<Object, Box<dyn Error>> {
-        let mut endpoint: String = class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&id.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/{id}");
+        let mut endpoint = self.endpoint()?.join(&path)?;
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         if let Some(t) = tenant_key {
             // multi tenancy must be enabled first
@@ -241,7 +248,7 @@ impl Objects {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
     ///     let uuid = Uuid::parse_str("ee22d1b8-3b95-4e94-96d5-9a2b60fbd303").unwrap();
     ///     let res = client
-    ///         .objects
+    ///         .objects()
     ///         .exists("TestListObject", &uuid, None, None).await;
     ///     Ok(())
     /// }
@@ -253,14 +260,12 @@ impl Objects {
         consistency_level: Option<ConsistencyLevel>,
         tenant_name: Option<&str>,
     ) -> Result<bool, Box<dyn Error>> {
-        let mut endpoint: String = class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&id.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/{id}");
+        let mut endpoint = self.endpoint()?.join(&path)?;
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         if let Some(t) = tenant_name {
             // multi tenancy must be enabled first
@@ -300,7 +305,7 @@ impl Objects {
     ///         "name": "new name",
     ///     });
     ///     let res = client
-    ///         .objects
+    ///         .objects()
     ///         .update(&properties, "Article", &uuid, None).await;
     ///     Ok(())
     /// }
@@ -312,14 +317,12 @@ impl Objects {
         id: &Uuid,
         consistency_level: Option<ConsistencyLevel>,
     ) -> Result<bool, Box<dyn Error>> {
-        let mut endpoint: String = class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&id.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/{id}");
+        let mut endpoint = self.endpoint()?.join(&path)?;
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         let res = self.client.patch(endpoint).json(&properties).send().await?;
         match res.status() {
@@ -356,7 +359,7 @@ impl Objects {
     ///         }
     ///     });
     ///     let res = client
-    ///         .objects
+    ///         .objects()
     ///         .replace(&properties, "Publication", &uuid, None).await;
     ///     Ok(())
     /// }
@@ -368,20 +371,18 @@ impl Objects {
         id: &Uuid,
         consistency_level: Option<ConsistencyLevel>,
     ) -> Result<Object, Box<dyn Error>> {
+        let path = format!("{class_name}/{id}");
+        let mut endpoint = self.endpoint()?.join(&path)?;
+        if let Some(cl) = consistency_level {
+            endpoint
+                .query_pairs_mut()
+                .append_pair("consistency_level", cl.value());
+        }
         let payload = serde_json::json!({
             "class": class_name,
             "id": id,
             "properties": properties
         });
-        let mut endpoint: String = class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&id.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
-        if let Some(cl) = consistency_level {
-            endpoint
-                .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
-        }
 
         let res = self.client.put(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -411,7 +412,7 @@ impl Objects {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
     ///     let uuid = Uuid::parse_str("ee22d1b8-3b95-4e94-96d5-9a2b60fbd303").unwrap();
     ///     let res = client
-    ///         .objects
+    ///         .objects()
     ///         .delete("Article", &uuid, None, None)
     ///         .await;
     ///     Ok(())
@@ -424,14 +425,12 @@ impl Objects {
         consistency_level: Option<ConsistencyLevel>,
         tenant_name: Option<&str>,
     ) -> Result<bool, Box<dyn Error>> {
-        let mut endpoint: String = class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&id.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/{id}");
+        let mut endpoint = self.endpoint()?.join(&path)?;
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         if let Some(t) = tenant_name {
             // multi tenancy must be enabled first
@@ -464,7 +463,7 @@ impl Objects {
     ///         "name": "New York Times"
     ///     });
     ///     let uuid = Uuid::parse_str("12345678-1234-1234-1234-123456789012").unwrap();
-    ///     let res = client.objects.validate("Publication", &properties, &uuid).await;
+    ///     let res = client.objects().validate("Publication", &properties, &uuid).await;
     ///     Ok(())
     /// }
     /// ```
@@ -474,12 +473,12 @@ impl Objects {
         properties: &serde_json::Value,
         id: &Uuid,
     ) -> Result<bool, Box<dyn Error>> {
+        let endpoint = self.endpoint()?.join("validate")?;
         let payload = serde_json::json!({
             "class": class_name,
             "id": id.to_string(),
             "properties": properties
         });
-        let endpoint = self.endpoint.join("validate")?;
 
         let res = self.client.post(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -516,36 +515,35 @@ impl Objects {
     ///
     ///     let reference = Reference::new(
     ///         "JeopardyQuestion",
-    ///         &uuid1,
+    ///         uuid1,
     ///         "hasCategory",
     ///         "JeopardyCategory",
-    ///         &uuid2,
+    ///         uuid2,
     ///     );
     ///
-    ///     let res = client.objects.reference_add(reference).await;
+    ///     let res = client.objects().reference_add(reference).await;
     ///
     ///     Ok(())
     /// }
     /// ```
     pub async fn reference_add(&self, reference: Reference) -> Result<bool, Box<dyn Error>> {
-        let payload = serde_json::json!({
-            "beacon": format!("weaviate://localhost/{}/{}", reference.to_class_name, reference.to_uuid),
-        });
-        let mut endpoint: String = reference.from_class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&reference.from_uuid.to_string());
-        endpoint.push_str("/references/");
-        endpoint.push_str(&reference.from_property_name.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!(
+            "{}/{}/references/{}",
+            reference.from_class_name, reference.from_uuid, reference.from_property_name
+        );
+        let mut endpoint = self.endpoint()?.join(&path)?;
         if let Some(cl) = reference.consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         if let Some(t) = reference.tenant_name {
             // multi tenancy must be enabled first
             endpoint.query_pairs_mut().append_pair("tenant", &t);
         }
+        let payload = serde_json::json!({
+            "beacon": format!("weaviate://localhost/{}/{}", reference.to_class_name, reference.to_uuid),
+        });
 
         let res = self.client.post(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -579,7 +577,7 @@ impl Objects {
     ///     let uuid1 = Uuid::parse_str("12345678-1234-1234-1234-123456789012").unwrap();
     ///     let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();
     ///
-    ///     let res = client.objects.reference_update(
+    ///     let res = client.objects().reference_update(
     ///         "JeopardyQuestion",
     ///         &uuid1,
     ///         "hasCategory",
@@ -592,6 +590,7 @@ impl Objects {
     ///     Ok(())
     /// }
     /// ```
+    #[allow(clippy::too_many_arguments)]
     pub async fn reference_update(
         &self,
         from_class_name: &str,
@@ -608,6 +607,18 @@ impl Objects {
             )));
         }
 
+        let path = format!("{from_class_name}/{from_uuid}/references/{from_property_name}");
+        let mut endpoint = self.endpoint()?.join(&path)?;
+        if let Some(cl) = consistency_level {
+            endpoint
+                .query_pairs_mut()
+                .append_pair("consistency_level", cl.value());
+        }
+        if let Some(t) = tenant_name {
+            // multi tenancy must be enabled first
+            endpoint.query_pairs_mut().append_pair("tenant", t);
+        }
+
         // Match the class names to the id's in the beacon format
         let mut beacons = Vec::new();
         for (class_name, id) in to_class_names.iter().zip(to_uuids.iter()) {
@@ -616,22 +627,6 @@ impl Objects {
             }));
         }
         let payload = serde_json::json!(beacons);
-
-        let mut endpoint: String = from_class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&from_uuid.to_string());
-        endpoint.push_str("/references/");
-        endpoint.push_str(&from_property_name.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
-        if let Some(cl) = consistency_level {
-            endpoint
-                .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
-        }
-        if let Some(t) = tenant_name {
-            // multi tenancy must be enabled first
-            endpoint.query_pairs_mut().append_pair("tenant", t);
-        }
 
         let res = self.client.put(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -670,36 +665,36 @@ impl Objects {
     ///
     ///     let reference = Reference::new(
     ///         "JeopardyQuestion",
-    ///         &uuid1,
+    ///         uuid1,
     ///         "hasCategory",
     ///         "JeopardyCategory",
-    ///         &uuid2,
+    ///         uuid2,
     ///     );
     ///
-    ///     let res = client.objects.reference_delete(reference).await;
+    ///     let res = client.objects().reference_delete(reference).await;
     ///
     ///     Ok(())
     /// }
     /// ```
     pub async fn reference_delete(&self, reference: Reference) -> Result<bool, Box<dyn Error>> {
-        let payload = serde_json::json!({
-            "beacon": format!("weaviate://localhost/{}/{}", reference.to_class_name, reference.to_uuid),
-        });
-        let mut endpoint: String = reference.from_class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&reference.from_uuid.to_string());
-        endpoint.push_str("/references/");
-        endpoint.push_str(&reference.from_property_name.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!(
+            "{}/{}/references/{}",
+            reference.from_class_name, reference.from_uuid, reference.from_property_name
+        );
+        let mut endpoint = self.endpoint()?.join(&path)?;
         if let Some(cl) = reference.consistency_level {
             endpoint
                 .query_pairs_mut()
-                .append_pair("consistency_level", &cl.value());
+                .append_pair("consistency_level", cl.value());
         }
         if let Some(t) = reference.tenant_name {
             // multi tenancy must be enabled first
             endpoint.query_pairs_mut().append_pair("tenant", &t);
         }
+
+        let payload = serde_json::json!({
+            "beacon": format!("weaviate://localhost/{}/{}", reference.to_class_name, reference.to_uuid),
+        });
 
         let res = self.client.delete(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -713,22 +708,12 @@ impl Objects {
     /// Made to reduce the boilerplate error message building
     async fn get_err_msg(&self, endpoint: &str, res: reqwest::Response) -> Box<QueryError> {
         let status_code = res.status();
-        let msg: Result<serde_json::Value, reqwest::Error> = res.json().await;
-        let r_str: String;
-        if let Ok(json) = msg {
-            r_str = format!(
-                "Status code `{}` received when calling {} endpoint. Response: {}",
-                status_code,
-                endpoint,
-                json,
-            );
-        } else {
-            r_str = format!(
-                "Status code `{}` received when calling {} endpoint.",
-                status_code,
-                endpoint
-            );
-        }
+        let r_str = match res.json::<serde_json::Value>().await {
+            Ok(json) => format!(
+                "Status code `{status_code}` received when calling {endpoint} endpoint. Response: {json}"
+            ),
+            Err(_) => format!("Status code `{status_code}` received when calling {endpoint} endpoint.")
+        };
         Box::new(QueryError(r_str))
     }
 }
@@ -754,7 +739,7 @@ mod tests {
         MultiObjects::new(vec![test_object(class_name), test_object(class_name)])
     }
 
-    fn test_reference(uuid: &Uuid, uuid_2: &Uuid) -> Reference {
+    fn test_reference(uuid: Uuid, uuid_2: Uuid) -> Reference {
         Reference::new("Test", uuid, "testProperty", "TestTwo", uuid_2)
     }
 
@@ -853,7 +838,7 @@ mod tests {
         let objects = test_objects("Test");
         let objects_str = serde_json::to_string(&objects).unwrap();
         let mock = mock_get(&mut mock_server, "/v1/objects/", 200, &objects_str).await;
-        let res = client.objects.list(ObjectListParameters::new()).await;
+        let res = client.objects().list(ObjectListParameters::new()).await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(objects.objects[0].class, res.unwrap().objects[0].class);
@@ -863,7 +848,7 @@ mod tests {
     async fn test_list_err() {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/v1/objects/", 422, "").await;
-        let res = client.objects.list(ObjectListParameters::new()).await;
+        let res = client.objects().list(ObjectListParameters::new()).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -874,7 +859,7 @@ mod tests {
         let object = test_object("Test");
         let object_str = serde_json::to_string(&object).unwrap();
         let mock = mock_post(&mut mock_server, "/v1/objects/", 200, &object_str).await;
-        let res = client.objects.create(&object, None).await;
+        let res = client.objects().create(&object, None).await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(object.class, res.unwrap().class);
@@ -885,7 +870,7 @@ mod tests {
         let (mut mock_server, client) = get_test_harness().await;
         let object = test_object("Test");
         let mock = mock_post(&mut mock_server, "/v1/objects/", 422, "").await;
-        let res = client.objects.create(&object, None).await;
+        let res = client.objects().create(&object, None).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -899,7 +884,7 @@ mod tests {
         let mut url = String::from("/v1/objects/Test/");
         url.push_str(&uuid.to_string());
         let mock = mock_get(&mut mock_server, &url, 200, &object_str).await;
-        let res = client.objects.get("Test", &uuid, None, None, None).await;
+        let res = client.objects().get("Test", &uuid, None, None, None).await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(object.class, res.unwrap().class);
@@ -912,7 +897,7 @@ mod tests {
         let mut url = String::from("/v1/objects/Test/");
         url.push_str(&uuid.to_string());
         let mock = mock_get(&mut mock_server, &url, 422, "").await;
-        let res = client.objects.get("Test", &uuid, None, None, None).await;
+        let res = client.objects().get("Test", &uuid, None, None, None).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -924,7 +909,7 @@ mod tests {
         let mut url = String::from("/v1/objects/Test/");
         url.push_str(&uuid.to_string());
         let mock = mock_head(&mut mock_server, &url, 204, "").await;
-        let res = client.objects.exists("Test", &uuid, None, None).await;
+        let res = client.objects().exists("Test", &uuid, None, None).await;
         mock.assert();
         assert!(res.is_ok());
         assert!(res.unwrap());
@@ -937,7 +922,7 @@ mod tests {
         let mut url = String::from("/v1/objects/Test/");
         url.push_str(&uuid.to_string());
         let mock = mock_head(&mut mock_server, &url, 422, "").await;
-        let res = client.objects.exists("Test", &uuid, None, None).await;
+        let res = client.objects().exists("Test", &uuid, None, None).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -950,7 +935,7 @@ mod tests {
         url.push_str(&uuid.to_string());
         let mock = mock_patch(&mut mock_server, &url, 204, "").await;
         let res = client
-            .objects
+            .objects()
             .update(&serde_json::json![{}], "Test", &uuid, None)
             .await;
         mock.assert();
@@ -965,7 +950,7 @@ mod tests {
         url.push_str(&uuid.to_string());
         let mock = mock_patch(&mut mock_server, &url, 422, "").await;
         let res = client
-            .objects
+            .objects()
             .update(&serde_json::json![{}], "Test", &uuid, None)
             .await;
         mock.assert();
@@ -982,7 +967,7 @@ mod tests {
         url.push_str(&uuid.to_string());
         let mock = mock_put(&mut mock_server, &url, 200, &object_str).await;
         let res = client
-            .objects
+            .objects()
             .replace(&serde_json::json![{}], "Test", &uuid, None)
             .await;
         mock.assert();
@@ -997,7 +982,7 @@ mod tests {
         url.push_str(&uuid.to_string());
         let mock = mock_put(&mut mock_server, &url, 422, "").await;
         let res = client
-            .objects
+            .objects()
             .replace(&serde_json::json![{}], "Test", &uuid, None)
             .await;
         mock.assert();
@@ -1011,7 +996,7 @@ mod tests {
         let mut url = String::from("/v1/objects/Test/");
         url.push_str(&uuid.to_string());
         let mock = mock_delete(&mut mock_server, &url, 204).await;
-        let res = client.objects.delete("Test", &uuid, None, None).await;
+        let res = client.objects().delete("Test", &uuid, None, None).await;
         mock.assert();
         assert!(res.is_ok());
     }
@@ -1023,7 +1008,7 @@ mod tests {
         let mut url = String::from("/v1/objects/Test/");
         url.push_str(&uuid.to_string());
         let mock = mock_delete(&mut mock_server, &url, 404).await;
-        let res = client.objects.delete("Test", &uuid, None, None).await;
+        let res = client.objects().delete("Test", &uuid, None, None).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -1034,7 +1019,7 @@ mod tests {
         let uuid = Uuid::new_v4();
         let mock = mock_post(&mut mock_server, "/v1/objects/validate", 200, "").await;
         let res = client
-            .objects
+            .objects()
             .validate("Test", &serde_json::json![{}], &uuid)
             .await;
         mock.assert();
@@ -1047,7 +1032,7 @@ mod tests {
         let uuid = Uuid::new_v4();
         let mock = mock_post(&mut mock_server, "/v1/objects/validate", 404, "").await;
         let res = client
-            .objects
+            .objects()
             .validate("Test", &serde_json::json![{}], &uuid)
             .await;
         mock.assert();
@@ -1064,8 +1049,8 @@ mod tests {
         url.push_str("/references/testProperty");
         let mock = mock_post(&mut mock_server, &url, 200, "").await;
         let res = client
-            .objects
-            .reference_add(test_reference(&uuid, &uuid_2))
+            .objects()
+            .reference_add(test_reference(uuid, uuid_2))
             .await;
         mock.assert();
         assert!(res.is_ok());
@@ -1082,8 +1067,8 @@ mod tests {
         url.push_str("/references/testProperty");
         let mock = mock_post(&mut mock_server, &url, 404, "").await;
         let res = client
-            .objects
-            .reference_add(test_reference(&uuid, &uuid_2))
+            .objects()
+            .reference_add(test_reference(uuid, uuid_2))
             .await;
         mock.assert();
         assert!(res.is_err());
@@ -1101,7 +1086,7 @@ mod tests {
         url.push_str("/references/testProperty");
         let mock = mock_put(&mut mock_server, &url, 200, &object_str).await;
         let res = client
-            .objects
+            .objects()
             .reference_update(
                 "Test",
                 &uuid,
@@ -1126,7 +1111,7 @@ mod tests {
         url.push_str("/references/testProperty");
         let mock = mock_put(&mut mock_server, &url, 404, "").await;
         let res = client
-            .objects
+            .objects()
             .reference_update(
                 "Test",
                 &uuid,
@@ -1151,8 +1136,8 @@ mod tests {
         url.push_str("/references/testProperty");
         let mock = mock_delete(&mut mock_server, &url, 204).await;
         let res = client
-            .objects
-            .reference_delete(test_reference(&uuid, &uuid_2))
+            .objects()
+            .reference_delete(test_reference(uuid, uuid_2))
             .await;
         mock.assert();
         assert!(res.is_ok());
@@ -1169,8 +1154,8 @@ mod tests {
         url.push_str("/references/testProperty");
         let mock = mock_delete(&mut mock_server, &url, 404).await;
         let res = client
-            .objects
-            .reference_delete(test_reference(&uuid, &uuid_2))
+            .objects()
+            .reference_delete(test_reference(uuid, uuid_2))
             .await;
         mock.assert();
         assert!(res.is_err());

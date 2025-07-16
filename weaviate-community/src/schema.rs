@@ -1,25 +1,34 @@
+use reqwest::Url;
+
 use crate::collections::error::SchemaError;
 use crate::collections::schema::{
     Class, Classes, Property, Shard, ShardStatus, Shards, Tenant, Tenants,
 };
-use reqwest::Url;
+use crate::WeaviateClient;
 use std::error::Error;
-use std::sync::Arc;
 
 /// All schema related endpoints and functionality described in
 /// [Weaviate schema API documentation](https://weaviate.io/developers/weaviate/api/rest/schema)
 #[derive(Debug)]
-pub struct Schema {
-    endpoint: Url,
-    client: Arc<reqwest::Client>,
+pub struct Schema<'a> {
+    client: &'a WeaviateClient,
 }
 
-impl Schema {
+impl<'a> Schema<'a> {
     /// Create a new Schema object. The schema object is intended to like inside the WeaviateClient
     /// and be called through the WeaviateClient.
-    pub(super) fn new(url: &Url, client: Arc<reqwest::Client>) -> Result<Self, Box<dyn Error>> {
-        let endpoint = url.join("/v1/schema/")?;
-        Ok(Schema { endpoint, client })
+    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+        Schema { client }
+    }
+
+    /// Get the endpoint for schema
+    ///
+    /// # Returns
+    /// A `Result` containing the URL for the schema endpoint or a `ParseError` if the URL is invalid.
+    ///
+    /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
+    fn endpoint(&self) -> Result<Url, url::ParseError> {
+        self.client.base_url.join("/v1/schema/")
     }
 
     /// Facilitates the retrieval of the configuration for a single class in the schema.
@@ -31,20 +40,20 @@ impl Schema {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
-    ///     let response = client.schema.get_class("Library").await;
+    ///     let response = client.schema().get_class("Library").await;
     ///     assert!(response.is_err());
     ///     Ok(())
     /// }
     /// ```
     pub async fn get_class(&self, class_name: &str) -> Result<Class, Box<dyn Error>> {
-        let endpoint = self.endpoint.join(class_name)?;
+        let endpoint = self.endpoint()?.join(class_name)?;
         let res = self.client.get(endpoint).send().await?;
 
         match res.status() {
             reqwest::StatusCode::OK => {
                 let res: Class = res.json().await?;
                 Ok(res)
-            },
+            }
             _ => Err(self.get_err_msg("get class", res).await),
         }
     }
@@ -58,13 +67,14 @@ impl Schema {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
-    ///     let schema = client.schema.get().await?;
+    ///     let schema = client.schema().get().await?;
     ///     println!("{:#?}", &schema);
     ///     Ok(())
     /// }
     /// ```
     pub async fn get(&self) -> Result<Classes, Box<dyn Error>> {
-        let res = self.client.get(self.endpoint.clone()).send().await?;
+        let endpoint = self.endpoint()?;
+        let res = self.client.get(endpoint).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
                 let res: Classes = res.json().await?;
@@ -89,19 +99,15 @@ impl Schema {
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let class = Class::builder("Library").build();
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
-    ///     let res = client.schema.create_class(&class).await?;
+    ///     let res = client.schema().create_class(&class).await?;
     ///
     ///     Ok(())
     /// }
     /// ```
     pub async fn create_class(&self, class: &Class) -> Result<Class, Box<dyn Error>> {
-        let payload = serde_json::to_value(&class).unwrap();
-        let res = self
-            .client
-            .post(self.endpoint.clone())
-            .json(&payload)
-            .send()
-            .await?;
+        let endpoint = self.endpoint()?;
+        let payload = serde_json::to_value(class).unwrap();
+        let res = self.client.post(endpoint).json(&payload).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
                 let res: Class = res.json().await?;
@@ -121,14 +127,14 @@ impl Schema {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
-    ///     let response = client.schema.delete("Library").await;
+    ///     let response = client.schema().delete("Library").await;
     ///
     ///     Ok(())
     /// }
     /// ```
     ///
     pub async fn delete(&self, class_name: &str) -> Result<bool, Box<dyn Error>> {
-        let endpoint = self.endpoint.join(class_name)?;
+        let endpoint = self.endpoint()?.join(class_name)?;
         let res = self.client.delete(endpoint).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => Ok(true),
@@ -150,8 +156,8 @@ impl Schema {
     ///
     /// You should attach a body to this PUT request with the entire new configuration of the class
     pub async fn update(&self, class: &Class) -> Result<Class, Box<dyn Error>> {
-        let endpoint = self.endpoint.join(&class.class)?;
-        let payload = serde_json::to_value(&class)?;
+        let endpoint = self.endpoint()?.join(&class.class)?;
+        let payload = serde_json::to_value(class)?;
         let res = self.client.put(endpoint).json(&payload).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
@@ -172,8 +178,8 @@ impl Schema {
     ) -> Result<Property, Box<dyn Error>> {
         let mut endpoint = class_name.to_string();
         endpoint.push_str("/properties");
-        let endpoint = self.endpoint.join(&endpoint)?;
-        let payload = serde_json::to_value(&property)?;
+        let endpoint = self.endpoint()?.join(&endpoint)?;
+        let payload = serde_json::to_value(property)?;
         let res = self.client.post(endpoint).json(&payload).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
@@ -188,9 +194,8 @@ impl Schema {
     /// View all of the shards for a particular class.
     ///
     pub async fn get_shards(&self, class_name: &str) -> Result<Shards, Box<dyn Error>> {
-        let mut endpoint = class_name.to_string();
-        endpoint.push_str("/shards");
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/shards");
+        let endpoint = self.endpoint()?.join(&path)?;
         let res = self.client.get(endpoint).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
@@ -211,10 +216,8 @@ impl Schema {
         shard_name: &str,
         status: ShardStatus,
     ) -> Result<Shard, Box<dyn Error>> {
-        let mut endpoint = class_name.to_string();
-        endpoint.push_str("/shards/");
-        endpoint.push_str(shard_name);
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/shards/{shard_name}");
+        let endpoint = self.endpoint()?.join(&path)?;
         let payload = serde_json::json!({ "status": status });
         let res = self.client.put(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -230,9 +233,8 @@ impl Schema {
     /// List tenants
     ///
     pub async fn list_tenants(&self, class_name: &str) -> Result<Tenants, Box<dyn Error>> {
-        let mut endpoint = class_name.to_string();
-        endpoint.push_str("/tenants");
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/tenants");
+        let endpoint = self.endpoint()?.join(&path)?;
         let res = self.client.get(endpoint).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
@@ -252,9 +254,8 @@ impl Schema {
         class_name: &str,
         tenants: &Tenants,
     ) -> Result<Tenants, Box<dyn Error>> {
-        let mut endpoint = class_name.to_string();
-        endpoint.push_str("/tenants");
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/tenants");
+        let endpoint = self.endpoint()?.join(&path)?;
         let payload = serde_json::to_value(&tenants.tenants)?;
         let res = self.client.post(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -275,10 +276,9 @@ impl Schema {
         class_name: &str,
         tenants: &Vec<&str>,
     ) -> Result<bool, Box<dyn Error>> {
-        let mut endpoint = class_name.to_string();
-        endpoint.push_str("/tenants");
-        let endpoint = self.endpoint.join(&endpoint)?;
-        let payload = serde_json::to_value(&tenants)?;
+        let path = format!("{class_name}/tenants");
+        let endpoint = self.endpoint()?.join(&path)?;
+        let payload = serde_json::to_value(tenants)?;
         let res = self.client.delete(endpoint).json(&payload).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => Ok(true),
@@ -298,9 +298,8 @@ impl Schema {
         class_name: &str,
         tenants: &Tenants,
     ) -> Result<Tenants, Box<dyn Error>> {
-        let mut endpoint = class_name.to_string();
-        endpoint.push_str("/tenants");
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/tenants");
+        let endpoint = self.endpoint()?.join(&path)?;
         let payload = serde_json::to_value(&tenants.tenants)?;
         let res = self.client.put(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -322,17 +321,11 @@ impl Schema {
         let r_str: String;
         if let Ok(json) = msg {
             r_str = format!(
-                "Status code `{}` received when calling {} endpoint. Response: {}",
-                status_code,
-                endpoint,
-                json,
+                "Status code `{status_code}` received when calling {endpoint} endpoint. Response: {json}"
             );
         } else {
-            r_str = format!(
-                "Status code `{}` received when calling {} endpoint.",
-                status_code,
-                endpoint
-            );
+            r_str =
+                format!("Status code `{status_code}` received when calling {endpoint} endpoint.",);
         }
         Box::new(SchemaError(r_str))
     }
@@ -454,7 +447,7 @@ mod tests {
         let class_str = serde_json::to_string(&class).unwrap();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/schema/", 200, &class_str).await;
-        let res = client.schema.create_class(&class).await;
+        let res = client.schema().create_class(&class).await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(class.class, res.unwrap().class);
@@ -465,7 +458,7 @@ mod tests {
         let class = test_class("UnitClass");
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/schema/", 401, "").await;
-        let res = client.schema.create_class(&class).await;
+        let res = client.schema().create_class(&class).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -476,7 +469,7 @@ mod tests {
         let class_str = serde_json::to_string(&classes).unwrap();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/v1/schema/", 200, &class_str).await;
-        let res = client.schema.get().await;
+        let res = client.schema().get().await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(classes.classes[0].class, res.unwrap().classes[0].class);
@@ -486,7 +479,7 @@ mod tests {
     async fn test_get_all_classes_err() {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/v1/schema/", 401, "").await;
-        let class = client.schema.get().await;
+        let class = client.schema().get().await;
         mock.assert();
         assert!(class.is_err());
     }
@@ -497,7 +490,7 @@ mod tests {
         let class_str = serde_json::to_string(&class).unwrap();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/v1/schema/Test", 200, &class_str).await;
-        let res = client.schema.get_class("Test").await;
+        let res = client.schema().get_class("Test").await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(class.class, res.unwrap().class);
@@ -507,7 +500,7 @@ mod tests {
     async fn test_get_single_class_err() {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/v1/schema/Test", 401, "").await;
-        let class = client.schema.get_class("Test").await;
+        let class = client.schema().get_class("Test").await;
         mock.assert();
         assert!(class.is_err());
     }
@@ -516,7 +509,7 @@ mod tests {
     async fn test_get_delete_class_ok() {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_delete(&mut mock_server, "/v1/schema/Test", 200).await;
-        let res = client.schema.delete("Test").await;
+        let res = client.schema().delete("Test").await;
         mock.assert();
         assert!(res.is_ok());
         assert!(res.unwrap());
@@ -526,7 +519,7 @@ mod tests {
     async fn test_get_delete_class_err() {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_delete(&mut mock_server, "/v1/schema/Test", 401).await;
-        let class = client.schema.delete("Test").await;
+        let class = client.schema().delete("Test").await;
         mock.assert();
         assert!(class.is_err());
     }
@@ -537,7 +530,7 @@ mod tests {
         let class_str = serde_json::to_string(&class).unwrap();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_put(&mut mock_server, "/v1/schema/Test", 200, &class_str).await;
-        let res = client.schema.update(&class).await;
+        let res = client.schema().update(&class).await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(class.class, res.unwrap().class);
@@ -548,7 +541,7 @@ mod tests {
         let class = test_class("Test");
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_put(&mut mock_server, "/v1/schema/Test", 401, "").await;
-        let res = client.schema.update(&class).await;
+        let res = client.schema().update(&class).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -563,8 +556,9 @@ mod tests {
             "/v1/schema/TestClass/properties",
             200,
             &property_str,
-        ).await;
-        let res = client.schema.add_property("TestClass", &property).await;
+        )
+        .await;
+        let res = client.schema().add_property("TestClass", &property).await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(property.name, res.unwrap().name);
@@ -575,7 +569,7 @@ mod tests {
         let property = test_property("Test");
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/schema/TestClass/properties", 401, "").await;
-        let res = client.schema.add_property("TestClass", &property).await;
+        let res = client.schema().add_property("TestClass", &property).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -586,7 +580,7 @@ mod tests {
         let shards_str = serde_json::to_string(&shards.shards).unwrap();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/v1/schema/Test/shards", 200, &shards_str).await;
-        let res = client.schema.get_shards("Test").await;
+        let res = client.schema().get_shards("Test").await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(shards.shards[0].name, res.unwrap().shards[0].name);
@@ -596,7 +590,7 @@ mod tests {
     async fn test_get_shards_err() {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/v1/schema/Test/shards", 401, "").await;
-        let res = client.schema.get_shards("Test").await;
+        let res = client.schema().get_shards("Test").await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -611,9 +605,10 @@ mod tests {
             "/v1/schema/Test/shards/abcd",
             200,
             &shard_str,
-        ).await;
+        )
+        .await;
         let res = client
-            .schema
+            .schema()
             .update_class_shard("Test", "abcd", ShardStatus::READONLY)
             .await;
         mock.assert();
@@ -626,7 +621,7 @@ mod tests {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_put(&mut mock_server, "/v1/schema/Test/shards/abcd", 401, "").await;
         let res = client
-            .schema
+            .schema()
             .update_class_shard("Test", "abcd", ShardStatus::READONLY)
             .await;
         mock.assert();
@@ -643,8 +638,9 @@ mod tests {
             "/v1/schema/Test/tenants",
             200,
             &tenants_str,
-        ).await;
-        let res = client.schema.list_tenants("Test").await;
+        )
+        .await;
+        let res = client.schema().list_tenants("Test").await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(tenants.tenants[0].name, res.unwrap().tenants[0].name);
@@ -654,7 +650,7 @@ mod tests {
     async fn test_list_tenants_err() {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/v1/schema/Test/tenants", 422, "").await;
-        let res = client.schema.list_tenants("Test").await;
+        let res = client.schema().list_tenants("Test").await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -669,8 +665,9 @@ mod tests {
             "/v1/schema/Test/tenants",
             200,
             &tenants_str,
-        ).await;
-        let res = client.schema.add_tenants("Test", &tenants).await;
+        )
+        .await;
+        let res = client.schema().add_tenants("Test", &tenants).await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(tenants.tenants[0].name, res.unwrap().tenants[0].name);
@@ -681,7 +678,7 @@ mod tests {
         let tenants = test_tenants();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/schema/Test/tenants", 422, "").await;
-        let res = client.schema.add_tenants("Test", &tenants).await;
+        let res = client.schema().add_tenants("Test", &tenants).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -691,7 +688,7 @@ mod tests {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_delete(&mut mock_server, "/v1/schema/Test/tenants", 200).await;
         let res = client
-            .schema
+            .schema()
             .remove_tenants("Test", &vec!["TestTenant"])
             .await;
         mock.assert();
@@ -704,7 +701,7 @@ mod tests {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_delete(&mut mock_server, "/v1/schema/Test/tenants", 422).await;
         let res = client
-            .schema
+            .schema()
             .remove_tenants("Test", &vec!["TestTenant"])
             .await;
         mock.assert();
@@ -721,8 +718,9 @@ mod tests {
             "/v1/schema/Test/tenants",
             200,
             &tenants_str,
-        ).await;
-        let res = client.schema.update_tenants("Test", &tenants).await;
+        )
+        .await;
+        let res = client.schema().update_tenants("Test", &tenants).await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(tenants.tenants[0].name, res.unwrap().tenants[0].name);
@@ -733,7 +731,7 @@ mod tests {
         let tenants = test_tenants();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_put(&mut mock_server, "/v1/schema/Test/tenants", 422, "").await;
-        let res = client.schema.update_tenants("Test", &tenants).await;
+        let res = client.schema().update_tenants("Test", &tenants).await;
         mock.assert();
         assert!(res.is_err());
     }

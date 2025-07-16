@@ -1,25 +1,31 @@
 use reqwest::Url;
 use std::error::Error;
-use std::sync::Arc;
 
 use crate::collections::meta::Metadata;
+use crate::WeaviateClient;
 
 /// All meta related endpoints and functionality described in
 /// [Weaviate meta API documentation](https://weaviate.io/developers/weaviate/api/rest/meta)
 #[derive(Debug)]
-pub struct Meta {
-    /// The full URL to the Meta endpoint
-    endpoint: Url,
-    /// The sub-client which executes the requests - temporary
-    client: Arc<reqwest::Client>,
+pub struct Meta<'a> {
+    client: &'a WeaviateClient,
 }
 
-impl Meta {
+impl<'a> Meta<'a> {
     /// Create a new instance of the Meta endpoint struct. Should only be done by the parent
     /// client.
-    pub(super) fn new(url: &Url, client: Arc<reqwest::Client>) -> Result<Self, Box<dyn Error>> {
-        let endpoint = url.join("/v1/meta/")?;
-        Ok(Meta { endpoint, client })
+    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+        Meta { client }
+    }
+
+    /// Get the endpoint for metadata
+    ///
+    /// # Returns
+    /// A `Result` containing the URL for the metadata endpoint or a `ParseError` if the URL is invalid.
+    ///
+    /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
+    fn endpoint(&self) -> Result<Url, url::ParseError> {
+        self.client.base_url.join("/v1/meta/")
     }
 
     /// Get the metadata associated to the clients Weaviate instance.
@@ -39,13 +45,14 @@ impl Meta {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
-    ///     let res = client.meta.get_meta().await?;
+    ///     let res = client.meta().get_meta().await?;
     ///
     ///     Ok(())
     /// }
     /// ```
     pub async fn get_meta(&self) -> Result<Metadata, Box<dyn Error>> {
-        let res = self.client.get(self.endpoint.clone()).send().await?;
+        let endpoint = self.endpoint()?;
+        let res = self.client.get(endpoint).send().await?;
         let res: Metadata = res.json().await?;
         Ok(res)
     }
@@ -98,7 +105,7 @@ mod tests {
         let metadata = test_metadata();
         let metadata_str = serde_json::to_string(&metadata).unwrap();
         let mock = mock_get(&mut mock_server, "/v1/meta/", 200, &metadata_str).await;
-        let res = client.meta.get_meta().await;
+        let res = client.meta().get_meta().await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(res.unwrap().hostname, metadata.hostname);
@@ -108,7 +115,7 @@ mod tests {
     async fn test_get_meta_err() {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/v1/meta/", 404, "").await;
-        let res = client.meta.get_meta().await;
+        let res = client.meta().get_meta().await;
         mock.assert();
         assert!(res.is_err());
     }

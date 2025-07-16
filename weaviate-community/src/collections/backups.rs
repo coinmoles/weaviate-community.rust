@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 /// Strict definitions of the different backends available for backups.
 ///
 /// Weaviate supports S3, GCS, AZURE, and FILESYSTEM shard status.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum BackupBackends {
     #[serde(rename = "s3")]
     S3,

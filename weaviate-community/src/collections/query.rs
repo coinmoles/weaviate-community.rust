@@ -376,29 +376,29 @@ impl AggregateBuilder {
         if self.contains_filter() {
             query.push_str("    (\n");
             if let Some(where_clause) = &self.where_clause {
-                query.push_str(format!("      where: {}\n", where_clause).as_str());
+                query.push_str(format!("      where: {where_clause}\n").as_str());
             }
             if let Some(group_by) = &self.group_by {
-                query.push_str(format!("      groupBy: {}\n", group_by).as_str());
+                query.push_str(format!("      groupBy: {group_by}\n").as_str());
             }
             if let Some(near) = &self.where_clause {
-                query.push_str(format!("      near: {}\n", near).as_str());
+                query.push_str(format!("      near: {near}\n").as_str());
             }
             if let Some(object_limit) = &self.object_limit {
-                query.push_str(format!("      objectLimit: {}\n", object_limit).as_str());
+                query.push_str(format!("      objectLimit: {object_limit}\n").as_str());
             }
             if let Some(tenant) = &self.tenant {
-                query.push_str(format!("      tenant: {}\n", tenant).as_str());
+                query.push_str(format!("      tenant: {tenant}\n").as_str());
             }
             if let Some(limit) = &self.limit {
-                query.push_str(format!("      limit: {}\n", limit).as_str());
+                query.push_str(format!("      limit: {limit}\n").as_str());
             }
             query.push_str("    )\n");
         }
 
         // Body
         query.push_str("    {\n");
-        if let Some(_) = &self.meta_count {
+        if self.meta_count.is_some() {
             query.push_str("      meta{count}\n");
         }
 
@@ -407,7 +407,7 @@ impl AggregateBuilder {
         }
         query.push_str("    }\n");
         query.push_str("  }\n");
-        query.push_str("}");
+        query.push('}');
         AggregateQuery { query }
     }
 
@@ -449,7 +449,7 @@ impl ExploreQuery {
 }
 
 /// The builder for the `ExploreQuery`
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct ExploreBuilder {
     limit: Option<u32>,
     near_text: Option<String>,
@@ -469,12 +469,7 @@ impl ExploreBuilder {
     /// let query_builder = ExploreBuilder::new();
     /// ```
     pub fn new() -> Self {
-        ExploreBuilder {
-            limit: None,
-            near_text: None,
-            near_vector: None,
-            fields: None,
-        }
+        ExploreBuilder::default()
     }
 
     /// Appends the specified fields in the explore query body.
@@ -562,13 +557,13 @@ impl ExploreBuilder {
         // Filters
         query.push_str("  (\n");
         if let Some(limit) = &self.limit {
-            query.push_str(format!("    limit: {}\n", limit).as_str());
+            query.push_str(format!("    limit: {limit}\n").as_str());
         }
         if let Some(near_text) = &self.near_text {
-            query.push_str(format!("    nearText: {}\n", near_text).as_str());
+            query.push_str(format!("    nearText: {near_text}\n").as_str());
         }
         if let Some(near_vector) = &self.near_vector {
-            query.push_str(format!("    nearVector: {}\n", near_vector).as_str());
+            query.push_str(format!("    nearVector: {near_vector}\n").as_str());
         }
         query.push_str("  )\n");
 
@@ -578,7 +573,7 @@ impl ExploreBuilder {
             query.push_str(format!("    {}\n", fields.join(" ")).as_str());
         }
         query.push_str("  }\n");
-        query.push_str("}");
+        query.push('}');
 
         ExploreQuery { query }
     }
@@ -992,7 +987,6 @@ impl GetBuilder {
         self
     }
 
-    ///
     pub fn with_ask(mut self, ask: &str) -> GetBuilder {
         self.ask = Some(ask.into());
         self
@@ -1044,65 +1038,65 @@ impl GetBuilder {
         if self.contains_filter() {
             query.push_str("    (\n");
             if let Some(where_clause) = &self.where_clause {
-                query.push_str(format!("      where: {}\n", where_clause).as_str());
+                query.push_str(format!("      where: {where_clause}\n").as_str());
             }
             if let Some(limit) = &self.limit {
-                query.push_str(format!("      limit: {}\n", limit).as_str());
+                query.push_str(format!("      limit: {limit}\n").as_str());
             }
             if let Some(offset) = &self.offset {
-                query.push_str(format!("      offset: {}\n", offset).as_str());
+                query.push_str(format!("      offset: {offset}\n").as_str());
             }
             if let Some(near_text) = &self.near_text {
-                query.push_str(format!("      nearText: {}\n", near_text).as_str());
+                query.push_str(format!("      nearText: {near_text}\n").as_str());
             }
             if let Some(near_vector) = &self.near_vector {
-                query.push_str(format!("      nearVector: {}\n", near_vector).as_str());
+                query.push_str(format!("      nearVector: {near_vector}\n").as_str());
             }
             if let Some(near_object) = &self.near_object {
-                query.push_str(format!("      nearObject: {}\n", near_object).as_str());
+                query.push_str(format!("      nearObject: {near_object}\n").as_str());
             }
             if let Some(near_image) = &self.near_image {
-                query.push_str(format!("      nearImage: {}\n", near_image).as_str());
+                query.push_str(format!("      nearImage: {near_image}\n").as_str());
             }
             if let Some(near_audio) = &self.near_audio {
-                query.push_str(format!("      nearAudio: {}\n", near_audio).as_str());
+                query.push_str(format!("      nearAudio: {near_audio}\n").as_str());
             }
             if let Some(near_video) = &self.near_video {
-                query.push_str(format!("      nearVideo: {}\n", near_video).as_str());
+                query.push_str(format!("      nearVideo: {near_video}\n").as_str());
             }
             if let Some(near_thermal) = &self.near_thermal {
-                query.push_str(format!("      nearThermal: {}\n", near_thermal).as_str());
+                query.push_str(format!("      nearThermal: {near_thermal}\n").as_str());
             }
             if let Some(near_imu) = &self.near_imu {
-                query.push_str(format!("      nearIMU: {}\n", near_imu).as_str());
+                query.push_str(format!("      nearIMU: {near_imu}\n").as_str());
             }
             if let Some(near_depth) = &self.near_depth {
-                query.push_str(format!("      nearDepth: {}\n", near_depth).as_str());
+                query.push_str(format!("      nearDepth: {near_depth}\n").as_str());
             }
             if let Some(bm25) = &self.bm25 {
-                query.push_str(format!("      bm25: {}\n", bm25).as_str());
+                query.push_str(format!("      bm25: {bm25}\n").as_str());
             }
             if let Some(hybrid) = &self.hybrid {
-                query.push_str(format!("      hybrid: {}\n", hybrid).as_str());
+                query.push_str(format!("      hybrid: {hybrid}\n").as_str());
             }
             if let Some(group_by) = &self.group_by {
-                query.push_str(format!("      group_by: {}\n", group_by).as_str());
+                query.push_str(format!("      group_by: {group_by}\n").as_str());
             }
             if let Some(after) = &self.after {
-                query.push_str(format!("      after: {}\n", after).as_str());
+                query.push_str(format!("      after: {after}\n").as_str());
             }
             if let Some(tenant) = &self.tenant {
-                query.push_str(format!("      tenant: {}\n", tenant).as_str());
+                query.push_str(format!("      tenant: {tenant}\n").as_str());
             }
             if let Some(autocut) = &self.autocut {
-                query.push_str(format!("      autocut: {}\n", autocut).as_str());
+                query.push_str(format!("      autocut: {autocut}\n").as_str());
             }
 
             if let Some(sort) = &self.sort {
-                query.push_str(format!("      sort: {}\n", sort).as_str());
+                query.push_str(format!("      sort: {sort}\n").as_str());
             }
             if let Some(ask) = &self.ask {
-                query.push_str(format!("      ask: {}\n", ask).as_str());
+                query.push_str(format!("      ask: {ask}\n").as_str());
             }
             query.push_str("    )\n");
         }
@@ -1118,7 +1112,7 @@ impl GetBuilder {
         }
         query.push_str("    }\n");
         query.push_str("  }\n");
-        query.push_str("}");
+        query.push('}');
         GetQuery { query }
     }
 

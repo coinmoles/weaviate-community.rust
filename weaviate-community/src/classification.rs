@@ -1,27 +1,37 @@
-use reqwest::Url;
 use std::error::Error;
-use std::sync::Arc;
+use url::Url;
 use uuid::Uuid;
 
-use crate::collections::{
-    classification::{ClassificationRequest, ClassificationResponse},
-    error::ClassificationError,
+use crate::{
+    collections::{
+        classification::{ClassificationRequest, ClassificationResponse},
+        error::ClassificationError,
+    },
+    WeaviateClient,
 };
 
 /// All classification related endpoints and functionality described in
 /// [Weaviate meta API documentation](https://weaviate.io/developers/weaviate/api/rest/classification)
 #[derive(Debug)]
-pub struct Classification {
-    endpoint: Url,
-    client: Arc<reqwest::Client>,
+pub struct Classification<'a> {
+    client: &'a WeaviateClient,
 }
 
-impl Classification {
-    /// Create a new instance of the Classification endpoint struct. Should only be done by the 
+impl<'a> Classification<'a> {
+    /// Create a new instance of the Classification endpoint struct. Should only be done by the
     /// parent client.
-    pub(super) fn new(url: &Url, client: Arc<reqwest::Client>) -> Result<Self, Box<dyn Error>> {
-        let endpoint = url.join("/v1/classifications/")?;
-        Ok(Classification { endpoint, client })
+    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+        Classification { client }
+    }
+
+    /// Get the endpoint for classifications
+    ///
+    /// # Returns
+    /// A `Result` containing the URL for the classifications endpoint or a `ParseError` if the URL is invalid.
+    ///
+    /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
+    fn endpoint(&self) -> Result<Url, url::ParseError> {
+        self.client.base_url.join("/v1/classifications/")
     }
 
     /// Schedule a new classification
@@ -55,7 +65,7 @@ impl Classification {
     ///         }))
     ///         .build();
     ///
-    ///     let res = client.classification.schedule(req).await?;
+    ///     let res = client.classification().schedule(req).await?;
     ///     Ok(())
     /// }
     /// ```
@@ -63,18 +73,14 @@ impl Classification {
         &self,
         request: ClassificationRequest,
     ) -> Result<ClassificationResponse, Box<dyn Error>> {
-        let res = self
-            .client
-            .post(self.endpoint.clone())
-            .json(&request)
-            .send()
-            .await?;
+        let endpoint = self.endpoint()?;
+        let res = self.client.post(endpoint).json(&request).send().await?;
         match res.status() {
             reqwest::StatusCode::CREATED => {
                 let res: ClassificationResponse = res.json().await?;
                 Ok(res)
             }
-            _ => Err(self.get_err_msg("schedule classification", res).await)
+            _ => Err(self.get_err_msg("schedule classification", res).await),
         }
     }
 
@@ -90,19 +96,19 @@ impl Classification {
     ///     let uuid = Uuid::parse_str("00037775-1432-35e5-bc59-443baaef7d80")?;
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
     ///
-    ///     let res = client.classification.get(uuid).await?;
+    ///     let res = client.classification().get(uuid).await?;
     ///     Ok(())
     /// }
     /// ```
     pub async fn get(&self, id: Uuid) -> Result<ClassificationResponse, Box<dyn Error>> {
-        let endpoint = self.endpoint.join(&id.to_string())?;
+        let endpoint = self.endpoint()?.join(&id.to_string())?;
         let res = self.client.get(endpoint).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
                 let res: ClassificationResponse = res.json().await?;
                 Ok(res)
             }
-            _ => Err(self.get_err_msg("get classification", res).await)
+            _ => Err(self.get_err_msg("get classification", res).await),
         }
     }
 
@@ -112,36 +118,28 @@ impl Classification {
     async fn get_err_msg(
         &self,
         endpoint: &str,
-        res: reqwest::Response
+        res: reqwest::Response,
     ) -> Box<ClassificationError> {
         let status_code = res.status();
-        let msg: Result<serde_json::Value, reqwest::Error> = res.json().await;
-        let r_str: String;
-        if let Ok(json) = msg {
-            r_str = format!(
-                "Status code `{}` received when calling {} endpoint. Response: {}",
-                status_code,
-                endpoint,
-                json,
-            );
-        } else {
-            r_str = format!(
-                "Status code `{}` received when calling {} endpoint.",
-                status_code,
-                endpoint
-            );
-        }
+        let r_str = match res.json::<serde_json::Value>().await {
+            Ok(json) => format!(
+                "Status code `{status_code}` received when calling {endpoint} endpoint. Response: {json}"
+            ),
+            Err(_) => format!(
+                "Status code `{status_code}` received when calling {endpoint} endpoint.",
+            )
+        };
         Box::new(ClassificationError(r_str))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use uuid::Uuid;
     use crate::{
+        collections::classification::{ClassificationRequest, ClassificationType},
         WeaviateClient,
-        collections::classification::{ClassificationRequest, ClassificationType}
     };
+    use uuid::Uuid;
 
     async fn get_test_harness() -> (mockito::ServerGuard, WeaviateClient) {
         let mock_server = mockito::Server::new_async().await;
@@ -202,7 +200,7 @@ mod tests {
         let req = test_classification_req();
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/classifications/", 401, "").await;
-        let res = client.classification.schedule(req).await;
+        let res = client.classification().schedule(req).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -217,7 +215,7 @@ mod tests {
         url.push_str(&uuid.to_string());
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, &url, 401, "").await;
-        let res = client.classification.get(uuid).await;
+        let res = client.classification().get(uuid).await;
         mock.assert();
         assert!(res.is_err());
     }
