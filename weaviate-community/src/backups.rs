@@ -46,7 +46,7 @@ impl<'a> Backups<'a> {
     ///         include: None,
     ///         exclude: None
     ///     };
-    ///     let res = client.backups.create(
+    ///     let res = client.backups().create(
     ///         BackupBackends::FILESYSTEM,
     ///         &my_request,
     ///         true
@@ -93,7 +93,7 @@ impl<'a> Backups<'a> {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
-    ///     let res = client.backups.get_backup_status(
+    ///     let res = client.backups().get_backup_status(
     ///         BackupBackends::FILESYSTEM,
     ///         "doc-test-backup",
     ///         true
@@ -141,7 +141,7 @@ impl<'a> Backups<'a> {
     ///         include: None,
     ///         exclude: None
     ///     };
-    ///     let res = client.backups.restore(
+    ///     let res = client.backups().restore(
     ///         BackupBackends::FILESYSTEM,
     ///         "doc-test-backup",
     ///         &my_request,
