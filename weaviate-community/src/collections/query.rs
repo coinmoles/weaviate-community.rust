@@ -449,7 +449,7 @@ impl ExploreQuery {
 }
 
 /// The builder for the `ExploreQuery`
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct ExploreBuilder {
     limit: Option<u32>,
     near_text: Option<String>,
@@ -469,12 +469,7 @@ impl ExploreBuilder {
     /// let query_builder = ExploreBuilder::new();
     /// ```
     pub fn new() -> Self {
-        ExploreBuilder {
-            limit: None,
-            near_text: None,
-            near_vector: None,
-            fields: None,
-        }
+        ExploreBuilder::default()
     }
 
     /// Appends the specified fields in the explore query body.
@@ -992,7 +987,6 @@ impl GetBuilder {
         self
     }
 
-    ///
     pub fn with_ask(mut self, ask: &str) -> GetBuilder {
         self.ask = Some(ask.into());
         self
