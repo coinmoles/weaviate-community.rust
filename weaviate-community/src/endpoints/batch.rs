@@ -2,7 +2,7 @@ use reqwest::Url;
 use std::error::Error;
 
 use crate::{
-    collections::{
+    models::{
         batch::{
             BatchAddObjects, BatchAddReferencesResponse, BatchDeleteRequest, BatchDeleteResponse,
         },
@@ -20,7 +20,7 @@ pub struct Batch<'a> {
 }
 
 impl<'a> Batch<'a> {
-    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+    pub(crate) fn new(client: &'a WeaviateClient) -> Self {
         Batch { client }
     }
 
@@ -44,7 +44,7 @@ impl<'a> Batch<'a> {
     /// ```rust
     /// use uuid::Uuid;
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::objects::{Object, MultiObjects, ConsistencyLevel};
+    /// use weaviate_community::models::objects::{Object, MultiObjects, ConsistencyLevel};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -116,8 +116,8 @@ impl<'a> Batch<'a> {
     /// ```rust
     /// use uuid::Uuid;
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::objects::{Object, MultiObjects, ConsistencyLevel};
-    /// use weaviate_community::collections::batch::{BatchDeleteRequest, MatchConfig};
+    /// use weaviate_community::models::objects::{Object, MultiObjects, ConsistencyLevel};
+    /// use weaviate_community::models::batch::{BatchDeleteRequest, MatchConfig};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -186,7 +186,7 @@ impl<'a> Batch<'a> {
     /// ```rust
     /// use uuid::Uuid;
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::objects::{Reference, References, ConsistencyLevel};
+    /// use weaviate_community::models::objects::{Reference, References, ConsistencyLevel};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -277,8 +277,8 @@ mod tests {
     use uuid::Uuid;
 
     use crate::{
-        collections::objects::{MultiObjects, Object},
-        collections::{
+        models::objects::{MultiObjects, Object},
+        models::{
             batch::{
                 BatchAddObject, BatchDeleteRequest, BatchDeleteResponse, BatchDeleteResult,
                 GeneralStatus, MatchConfig, ResultStatus,

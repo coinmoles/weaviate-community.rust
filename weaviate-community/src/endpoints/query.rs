@@ -1,5 +1,5 @@
 use crate::{
-    collections::{
+    models::{
         error::GraphQLError,
         query::{AggregateQuery, ExploreQuery, GetQuery, RawQuery},
     },
@@ -18,7 +18,7 @@ pub struct Query<'a> {
 impl<'a> Query<'a> {
     /// Create a new Query object. The query object is intended to like inside the WeaviateClient
     /// and be called through the WeaviateClient.
-    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+    pub(crate) fn new(client: &'a WeaviateClient) -> Self {
         Query { client }
     }
 
@@ -200,8 +200,8 @@ impl<'a> Query<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::collections::query::RawQuery;
-    use crate::collections::query::{AggregateBuilder, ExploreBuilder, GetBuilder};
+    use crate::models::query::RawQuery;
+    use crate::models::query::{AggregateBuilder, ExploreBuilder, GetBuilder};
     use crate::WeaviateClient;
 
     async fn get_test_harness() -> (mockito::ServerGuard, WeaviateClient) {

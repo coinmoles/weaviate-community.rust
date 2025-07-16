@@ -94,7 +94,7 @@ impl ContextionaryExtension {
     ///
     /// # Example
     /// ```no_run
-    /// use weaviate_community::collections::modules::ContextionaryExtension;
+    /// use weaviate_community::models::modules::ContextionaryExtension;
     ///
     /// let ext = ContextionaryExtension::new("concept", "description", 1.0);
     /// ```

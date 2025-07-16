@@ -1,5 +1,5 @@
-use crate::collections::error::ModuleError;
-use crate::collections::modules::{ContextionaryConcept, ContextionaryExtension};
+use crate::models::error::ModuleError;
+use crate::models::modules::{ContextionaryConcept, ContextionaryExtension};
 use crate::WeaviateClient;
 use reqwest::Url;
 use std::error::Error;
@@ -14,7 +14,7 @@ pub struct Modules<'a> {
 impl<'a> Modules<'a> {
     /// Create a new Modules object. The modules object is intended to like inside the
     /// WeaviateClient and be called through the WeaviateClient.
-    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+    pub(crate) fn new(client: &'a WeaviateClient) -> Self {
         Modules { client }
     }
 
@@ -73,7 +73,7 @@ impl<'a> Modules<'a> {
     /// # Example
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::modules::ContextionaryExtension;
+    /// use weaviate_community::models::modules::ContextionaryExtension;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -119,7 +119,7 @@ impl<'a> Modules<'a> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        collections::modules::{ContextionaryConcept, ContextionaryExtension, IndividualWords},
+        models::modules::{ContextionaryConcept, ContextionaryExtension, IndividualWords},
         WeaviateClient,
     };
 

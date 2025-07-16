@@ -3,7 +3,7 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::{
-    collections::{
+    models::{
         classification::{ClassificationRequest, ClassificationResponse},
         error::ClassificationError,
     },
@@ -20,7 +20,7 @@ pub struct Classification<'a> {
 impl<'a> Classification<'a> {
     /// Create a new instance of the Classification endpoint struct. Should only be done by the
     /// parent client.
-    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+    pub(crate) fn new(client: &'a WeaviateClient) -> Self {
         Classification { client }
     }
 
@@ -39,7 +39,7 @@ impl<'a> Classification<'a> {
     /// # Example
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::classification::{
+    /// use weaviate_community::models::classification::{
     ///     ClassificationRequest,
     ///     ClassificationType
     /// };
@@ -136,7 +136,7 @@ impl<'a> Classification<'a> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        collections::classification::{ClassificationRequest, ClassificationType},
+        models::classification::{ClassificationRequest, ClassificationType},
         WeaviateClient,
     };
     use uuid::Uuid;

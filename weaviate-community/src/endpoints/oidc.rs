@@ -2,8 +2,8 @@
 use reqwest::Url;
 use std::error::Error;
 
-use crate::collections::error::NotConfiguredError;
-use crate::collections::oidc::OidcResponse;
+use crate::models::error::NotConfiguredError;
+use crate::models::oidc::OidcResponse;
 use crate::WeaviateClient;
 
 #[derive(Debug)]
@@ -12,7 +12,7 @@ pub struct Oidc<'a> {
 }
 
 impl<'a> Oidc<'a> {
-    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+    pub(crate) fn new(client: &'a WeaviateClient) -> Self {
         Oidc { client }
     }
 
@@ -55,7 +55,7 @@ impl<'a> Oidc<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{collections::oidc::OidcResponse, WeaviateClient};
+    use crate::{models::oidc::OidcResponse, WeaviateClient};
 
     async fn test_oidc_response() -> OidcResponse {
         let response: OidcResponse = serde_json::from_value(

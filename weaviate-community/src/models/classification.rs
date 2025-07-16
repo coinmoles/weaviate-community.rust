@@ -25,7 +25,7 @@ impl ClassificationRequest {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::classification::ClassificationRequest;
+    /// use weaviate_community::models::classification::ClassificationRequest;
     ///
     /// let builder = ClassificationRequest::builder();
     /// ```
@@ -55,7 +55,7 @@ impl ClassificationRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::classification::ClassificationRequestBuilder;
+    /// use weaviate_community::models::classification::ClassificationRequestBuilder;
     ///
     /// let builder = ClassificationRequestBuilder::new();
     /// ```
@@ -70,7 +70,7 @@ impl ClassificationRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::classification::{
+    /// use weaviate_community::models::classification::{
     ///     ClassificationRequestBuilder,
     ///     ClassificationType
     /// };
@@ -93,7 +93,7 @@ impl ClassificationRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::classification::ClassificationRequestBuilder;
+    /// use weaviate_community::models::classification::ClassificationRequestBuilder;
     ///
     /// let builder = ClassificationRequestBuilder::new()
     ///     .with_class("Article");
@@ -110,7 +110,7 @@ impl ClassificationRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::classification::ClassificationRequestBuilder;
+    /// use weaviate_community::models::classification::ClassificationRequestBuilder;
     ///
     /// let builder = ClassificationRequestBuilder::new()
     ///     .with_classify_properties(vec!["hasPopularity"]);
@@ -134,7 +134,7 @@ impl ClassificationRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::classification::ClassificationRequestBuilder;
+    /// use weaviate_community::models::classification::ClassificationRequestBuilder;
     ///
     /// let builder = ClassificationRequestBuilder::new()
     ///     .with_based_on_properties(vec!["summary"]);
@@ -158,7 +158,7 @@ impl ClassificationRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::classification::ClassificationRequestBuilder;
+    /// use weaviate_community::models::classification::ClassificationRequestBuilder;
     ///
     /// let builder = ClassificationRequestBuilder::new()
     ///     .with_filters(serde_json::json!(
@@ -177,7 +177,7 @@ impl ClassificationRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::classification::ClassificationRequestBuilder;
+    /// use weaviate_community::models::classification::ClassificationRequestBuilder;
     ///
     /// let builder = ClassificationRequestBuilder::new()
     ///     .with_settings(serde_json::json!({"k": 3}));
@@ -192,7 +192,7 @@ impl ClassificationRequestBuilder {
     /// # Example
     /// Using ClassificationRequestBuilder
     /// ```rust
-    /// use weaviate_community::collections::classification::{
+    /// use weaviate_community::models::classification::{
     ///     ClassificationRequestBuilder,
     ///     ClassificationType
     /// };
@@ -211,7 +211,7 @@ impl ClassificationRequestBuilder {
     ///
     /// Using ClassificationRequest
     /// ```rust
-    /// use weaviate_community::collections::classification::{
+    /// use weaviate_community::models::classification::{
     ///     ClassificationRequest,
     ///     ClassificationType
     /// };

@@ -1,7 +1,7 @@
 use reqwest::Url;
 use std::error::Error;
 
-use crate::collections::meta::Metadata;
+use crate::models::meta::Metadata;
 use crate::WeaviateClient;
 
 /// All meta related endpoints and functionality described in
@@ -14,7 +14,7 @@ pub struct Meta<'a> {
 impl<'a> Meta<'a> {
     /// Create a new instance of the Meta endpoint struct. Should only be done by the parent
     /// client.
-    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+    pub(crate) fn new(client: &'a WeaviateClient) -> Self {
         Meta { client }
     }
 
@@ -60,7 +60,7 @@ impl<'a> Meta<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{collections::meta::Metadata, WeaviateClient};
+    use crate::{models::meta::Metadata, WeaviateClient};
 
     async fn get_test_harness() -> (mockito::ServerGuard, WeaviateClient) {
         let mock_server = mockito::Server::new_async().await;

@@ -29,7 +29,7 @@ impl RawQuery {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::RawQuery;
+    /// use weaviate_community::models::query::RawQuery;
     ///
     /// let my_query_str = "{
     ///   Get {
@@ -63,7 +63,7 @@ impl AggregateQuery {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::AggregateQuery;
+    /// use weaviate_community::models::query::AggregateQuery;
     ///
     /// let query = AggregateQuery::builder("Article");
     /// ```
@@ -93,7 +93,7 @@ impl AggregateBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::AggregateBuilder;
+    /// use weaviate_community::models::query::AggregateBuilder;
     ///
     /// let query_builder = AggregateBuilder::new("Article");
     /// ```
@@ -119,7 +119,7 @@ impl AggregateBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::AggregateBuilder;
+    /// use weaviate_community::models::query::AggregateBuilder;
     ///
     /// let query_builder = AggregateBuilder::new("Article")
     ///     .with_object_limit(1);
@@ -133,7 +133,7 @@ impl AggregateBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::AggregateBuilder;
+    /// use weaviate_community::models::query::AggregateBuilder;
     ///
     /// let query_builder = AggregateBuilder::new("Article")
     ///     .with_meta_count();
@@ -147,7 +147,7 @@ impl AggregateBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::AggregateBuilder;
+    /// use weaviate_community::models::query::AggregateBuilder;
     ///
     /// let query_builder = AggregateBuilder::new("Article")
     ///     .with_fields(vec!["wordCount { mean }"]);
@@ -174,7 +174,7 @@ impl AggregateBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::AggregateBuilder;
+    /// use weaviate_community::models::query::AggregateBuilder;
     ///
     /// let query_builder = AggregateBuilder::new("Article")
     ///     .with_group_by_filter("[\"inPublication\"]")
@@ -322,7 +322,7 @@ impl AggregateBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::AggregateBuilder;
+    /// use weaviate_community::models::query::AggregateBuilder;
     ///
     /// let query_builder = AggregateBuilder::new("Article")
     ///     .with_limit(1);
@@ -336,7 +336,7 @@ impl AggregateBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::AggregateBuilder;
+    /// use weaviate_community::models::query::AggregateBuilder;
     ///
     /// let query = AggregateBuilder::new("Article")
     ///     .with_fields(vec!["wordCount {count maximum mean median minimum mode sum type}"])
@@ -344,7 +344,7 @@ impl AggregateBuilder {
     /// ```
     ///
     /// ```
-    /// use weaviate_community::collections::query::AggregateQuery;
+    /// use weaviate_community::models::query::AggregateQuery;
     ///
     /// let query = AggregateQuery::builder("Article")
     ///     .with_meta_count()
@@ -439,7 +439,7 @@ impl ExploreQuery {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::ExploreQuery;
+    /// use weaviate_community::models::query::ExploreQuery;
     ///
     /// let query = ExploreQuery::builder();
     /// ```
@@ -464,7 +464,7 @@ impl ExploreBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::ExploreBuilder;
+    /// use weaviate_community::models::query::ExploreBuilder;
     ///
     /// let query_builder = ExploreBuilder::new();
     /// ```
@@ -476,7 +476,7 @@ impl ExploreBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::ExploreBuilder;
+    /// use weaviate_community::models::query::ExploreBuilder;
     ///
     /// let query_builder = ExploreBuilder::new()
     ///     .with_fields(vec!["beacon", "certainty", "className"]);
@@ -491,7 +491,7 @@ impl ExploreBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::ExploreBuilder;
+    /// use weaviate_community::models::query::ExploreBuilder;
     ///
     /// let query_builder = ExploreBuilder::new()
     ///     .with_limit(1);
@@ -531,13 +531,13 @@ impl ExploreBuilder {
     ///
     /// # Examples -> todo: need to add a nearVector or nearText
     /// ```no_run
-    /// use weaviate_community::collections::query::ExploreBuilder;
+    /// use weaviate_community::models::query::ExploreBuilder;
     ///
     /// let query = ExploreBuilder::new().build();
     /// ```
     ///
     /// ```no_run
-    /// use weaviate_community::collections::query::ExploreQuery;
+    /// use weaviate_community::models::query::ExploreQuery;
     ///
     /// let query = ExploreQuery::builder().build();
     /// ```
@@ -592,7 +592,7 @@ impl GetQuery {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::GetQuery;
+    /// use weaviate_community::models::query::GetQuery;
     ///
     /// let query = GetQuery::builder("Article", vec!["author"]);
     /// ```
@@ -636,7 +636,7 @@ impl GetBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::GetBuilder;
+    /// use weaviate_community::models::query::GetBuilder;
     ///
     /// let query_builder = GetBuilder::new(
     ///     "JeopardyQuestion",
@@ -675,7 +675,7 @@ impl GetBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::GetBuilder;
+    /// use weaviate_community::models::query::GetBuilder;
     ///
     /// let query_builder = GetBuilder::new(
     ///     "JeopardyQuestion",
@@ -691,7 +691,7 @@ impl GetBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::GetBuilder;
+    /// use weaviate_community::models::query::GetBuilder;
     ///
     /// let query_builder = GetBuilder::new(
     ///     "JeopardyQuestion",
@@ -716,7 +716,7 @@ impl GetBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::GetBuilder;
+    /// use weaviate_community::models::query::GetBuilder;
     ///
     /// let query_builder = GetBuilder::new("JeopardyQuestion", vec![])
     ///     .with_additional(vec!["vector"]);
@@ -734,7 +734,7 @@ impl GetBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::GetBuilder;
+    /// use weaviate_community::models::query::GetBuilder;
     ///
     /// let query_builder = GetBuilder::new("JeopardyQuestion", vec!["answer"])
     ///     .with_tenant("tenantA");
@@ -753,7 +753,7 @@ impl GetBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::GetBuilder;
+    /// use weaviate_community::models::query::GetBuilder;
     ///
     /// let query_builder = GetBuilder::new("JeopardyQuestion", vec!["question", "answer"])
     ///     .with_hybrid("{query: \"food\"}")
@@ -901,7 +901,7 @@ impl GetBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::GetBuilder;
+    /// use weaviate_community::models::query::GetBuilder;
     ///
     /// let query_builder = GetBuilder::new("JeopardyQuestion", vec!["question", "answer"])
     ///     .with_hybrid("{query: \"food\"}")
@@ -940,7 +940,7 @@ impl GetBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::GetBuilder;
+    /// use weaviate_community::models::query::GetBuilder;
     ///
     /// let query_builder = GetBuilder::new("JeopardyQuestion", vec!["question", "answer"])
     ///     .with_bm25("{query: \"food\"}")
@@ -996,7 +996,7 @@ impl GetBuilder {
     ///
     /// # Example
     /// ```
-    /// use weaviate_community::collections::query::GetBuilder;
+    /// use weaviate_community::models::query::GetBuilder;
     ///
     /// let query = GetBuilder::new(
     ///     "JeopardyQuestion",
@@ -1005,7 +1005,7 @@ impl GetBuilder {
     /// ```
     ///
     /// ```
-    /// use weaviate_community::collections::query::GetQuery;
+    /// use weaviate_community::models::query::GetQuery;
     ///
     /// let query = GetQuery::builder(
     ///     "JeopardyQuestion",

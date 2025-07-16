@@ -1,4 +1,4 @@
-use crate::collections::objects::Object;
+use crate::models::objects::Object;
 /// All batch associated type components
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -27,7 +27,7 @@ impl BatchDeleteRequest {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::batch::{BatchDeleteRequest, MatchConfig};
+    /// use weaviate_community::models::batch::{BatchDeleteRequest, MatchConfig};
     ///
     /// let map = serde_json::json!({
     ///     "operator": "NotEqual",
@@ -60,7 +60,7 @@ impl BatchDeleteRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::batch::{BatchDeleteRequestBuilder, MatchConfig};
+    /// use weaviate_community::models::batch::{BatchDeleteRequestBuilder, MatchConfig};
     ///
     /// let map = serde_json::json!({
     ///     "operator": "NotEqual",
@@ -86,7 +86,7 @@ impl BatchDeleteRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::batch::{
+    /// use weaviate_community::models::batch::{
     ///     BatchDeleteRequestBuilder,
     ///     MatchConfig,
     ///     Verbosity
@@ -114,7 +114,7 @@ impl BatchDeleteRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::batch::{
+    /// use weaviate_community::models::batch::{
     ///     BatchDeleteRequestBuilder,
     ///     MatchConfig,
     /// };
@@ -139,7 +139,7 @@ impl BatchDeleteRequestBuilder {
     /// # Example
     /// Using BatchDeleteRequestBuilder
     /// ```rust
-    /// use weaviate_community::collections::batch::{BatchDeleteRequestBuilder, MatchConfig};
+    /// use weaviate_community::models::batch::{BatchDeleteRequestBuilder, MatchConfig};
     ///
     /// let map = serde_json::json!({
     ///     "operator": "NotEqual",
@@ -153,7 +153,7 @@ impl BatchDeleteRequestBuilder {
     ///
     /// Using BatchDeleteRequest
     /// ```rust
-    /// use weaviate_community::collections::batch::{BatchDeleteRequest, MatchConfig};
+    /// use weaviate_community::models::batch::{BatchDeleteRequest, MatchConfig};
     ///
     /// let map = serde_json::json!({
     ///     "operator": "NotEqual",
@@ -189,7 +189,7 @@ impl MatchConfig {
     /// To revisit to strict type the map
     ///
     /// ```rust
-    /// use weaviate_community::collections::batch::MatchConfig;
+    /// use weaviate_community::models::batch::MatchConfig;
     /// let map = serde_json::json!({
     ///     "operator": "NotEqual",
     ///     "path": ["name"],
@@ -306,7 +306,7 @@ pub struct ErrorMessage {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BatchAddObjects(Vec<BatchAddObject>);
 
-/// This is basically the same as the collections::objects variant of an Object,
+/// This is basically the same as the models::objects variant of an Object,
 /// however there is an extra field which Weaviate polls with a ResultStatus.
 ///
 /// There should be no need to manually create this object, it forms part of the response from the

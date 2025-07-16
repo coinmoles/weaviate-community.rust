@@ -16,7 +16,7 @@ impl Classes {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{Class, Classes};
+    /// use weaviate_community::models::schema::{Class, Classes};
     ///
     /// let classes = Classes::new(
     ///     vec![
@@ -77,7 +77,7 @@ impl Class {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::Class;
+    /// use weaviate_community::models::schema::Class;
     ///
     /// let builder = Class::builder("Article");
     /// ```
@@ -112,7 +112,7 @@ impl ClassBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::ClassBuilder;
+    /// use weaviate_community::models::schema::ClassBuilder;
     ///
     /// let builder = ClassBuilder::new("Article");
     /// ```
@@ -139,7 +139,7 @@ impl ClassBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::ClassBuilder;
+    /// use weaviate_community::models::schema::ClassBuilder;
     ///
     /// let builder = ClassBuilder::new("Article")
     ///     .with_description("A news article");
@@ -156,7 +156,7 @@ impl ClassBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{
+    /// use weaviate_community::models::schema::{
     ///     ClassBuilder,
     ///     Properties,
     ///     Property
@@ -180,7 +180,7 @@ impl ClassBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{
+    /// use weaviate_community::models::schema::{
     ///     ClassBuilder,
     ///     VectorIndexType
     /// };
@@ -200,7 +200,7 @@ impl ClassBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{
+    /// use weaviate_community::models::schema::{
     ///     ClassBuilder,
     ///     VectorIndexConfig
     /// };
@@ -226,7 +226,7 @@ impl ClassBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::ClassBuilder;
+    /// use weaviate_community::models::schema::ClassBuilder;
     ///
     /// let builder = ClassBuilder::new("Article")
     ///     .with_vectorizer("none");
@@ -245,7 +245,7 @@ impl ClassBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::ClassBuilder;
+    /// use weaviate_community::models::schema::ClassBuilder;
     ///
     /// let builder = ClassBuilder::new("Article")
     ///     .with_module_config(serde_json::json!({}));
@@ -262,7 +262,7 @@ impl ClassBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{ClassBuilder, InvertedIndexConfig};
+    /// use weaviate_community::models::schema::{ClassBuilder, InvertedIndexConfig};
     ///
     /// let config = InvertedIndexConfig::builder().build();
     /// let builder = ClassBuilder::new("Article")
@@ -283,7 +283,7 @@ impl ClassBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{ClassBuilder, ShardingConfig};
+    /// use weaviate_community::models::schema::{ClassBuilder, ShardingConfig};
     ///
     /// let config = ShardingConfig::builder().build();
     /// let builder = ClassBuilder::new("Article")
@@ -301,7 +301,7 @@ impl ClassBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{ClassBuilder, MultiTenancyConfig};
+    /// use weaviate_community::models::schema::{ClassBuilder, MultiTenancyConfig};
     ///
     /// let config = MultiTenancyConfig::new(true);
     /// let builder = ClassBuilder::new("Article")
@@ -322,7 +322,7 @@ impl ClassBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{ClassBuilder, ReplicationConfig};
+    /// use weaviate_community::models::schema::{ClassBuilder, ReplicationConfig};
     ///
     /// let config = ReplicationConfig::new(3);
     /// let builder = ClassBuilder::new("Article")
@@ -341,14 +341,14 @@ impl ClassBuilder {
     /// # Example
     /// Using ClassBuilder
     /// ```rust
-    /// use weaviate_community::collections::schema::ClassBuilder;
+    /// use weaviate_community::models::schema::ClassBuilder;
     ///
     /// let class = ClassBuilder::new("Article").build();
     /// ```
     ///
     /// Using Class
     /// ```rust
-    /// use weaviate_community::collections::schema::Class;
+    /// use weaviate_community::models::schema::Class;
     ///
     /// let class = Class::builder("Article").build();
     /// ```
@@ -396,7 +396,7 @@ impl Properties {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{
+    /// use weaviate_community::models::schema::{
     ///     Properties,
     ///     Property
     /// };
@@ -450,7 +450,7 @@ impl Property {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::Property;
+    /// use weaviate_community::models::schema::Property;
     ///
     /// let builder = Property::builder("title", vec!["text"]);
     /// ```
@@ -486,7 +486,7 @@ impl PropertyBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PropertyBuilder;
+    /// use weaviate_community::models::schema::PropertyBuilder;
     ///
     /// let builder = PropertyBuilder::new("title", vec!["text"]);
     /// ```
@@ -512,7 +512,7 @@ impl PropertyBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PropertyBuilder;
+    /// use weaviate_community::models::schema::PropertyBuilder;
     ///
     /// let builder = PropertyBuilder::new("title", vec!["text"])
     ///     .with_description("The title of the article");
@@ -529,7 +529,7 @@ impl PropertyBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{PropertyBuilder, Tokenization};
+    /// use weaviate_community::models::schema::{PropertyBuilder, Tokenization};
     ///
     /// let builder = PropertyBuilder::new("title", vec!["text"])
     ///     .with_tokenization(Tokenization::WORD);
@@ -548,7 +548,7 @@ impl PropertyBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PropertyBuilder;
+    /// use weaviate_community::models::schema::PropertyBuilder;
     /// use std::collections::HashMap;
     ///
     /// let builder = PropertyBuilder::new("title", vec!["text"]);
@@ -565,7 +565,7 @@ impl PropertyBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PropertyBuilder;
+    /// use weaviate_community::models::schema::PropertyBuilder;
     ///
     /// let builder = PropertyBuilder::new("title", vec!["text"])
     ///     .with_index_filterable(true);
@@ -582,7 +582,7 @@ impl PropertyBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PropertyBuilder;
+    /// use weaviate_community::models::schema::PropertyBuilder;
     ///
     /// let builder = PropertyBuilder::new("title", vec!["text"])
     ///     .with_index_searchable(true);
@@ -599,7 +599,7 @@ impl PropertyBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PropertyBuilder;
+    /// use weaviate_community::models::schema::PropertyBuilder;
     ///
     /// let builder = PropertyBuilder::new("title", vec!["text"])
     ///     .with_index_range_filters(true);
@@ -616,7 +616,7 @@ impl PropertyBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{PropertyBuilder, InvertedIndexConfig};
+    /// use weaviate_community::models::schema::{PropertyBuilder, InvertedIndexConfig};
     ///
     /// let config = InvertedIndexConfig::builder().build();
     /// let builder = PropertyBuilder::new("title", vec!["text"])
@@ -635,14 +635,14 @@ impl PropertyBuilder {
     /// # Example
     /// Using PropertyBuilder
     /// ```rust
-    /// use weaviate_community::collections::schema::PropertyBuilder;
+    /// use weaviate_community::models::schema::PropertyBuilder;
     ///
     /// let builder = PropertyBuilder::new("title", vec!["text"]).build();
     /// ```
     ///
     /// Using Property
     /// ```rust
-    /// use weaviate_community::collections::schema::Property;
+    /// use weaviate_community::models::schema::Property;
     ///
     /// let builder = Property::builder("title", vec!["text"]).build();
     /// ```
@@ -710,7 +710,7 @@ impl VectorIndexConfig {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfig;
+    /// use weaviate_community::models::schema::VectorIndexConfig;
     ///
     /// let builder = VectorIndexConfig::builder();
     /// ```
@@ -743,7 +743,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfigBuilder;
+    /// use weaviate_community::models::schema::VectorIndexConfigBuilder;
     ///
     /// let builder = VectorIndexConfigBuilder::new();
     /// ```
@@ -771,7 +771,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{VectorIndexConfigBuilder, DistanceMetric};
+    /// use weaviate_community::models::schema::{VectorIndexConfigBuilder, DistanceMetric};
     ///
     /// let builder = VectorIndexConfigBuilder::new().with_distance(DistanceMetric::COSINE);
     /// ```
@@ -787,7 +787,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfigBuilder;
+    /// use weaviate_community::models::schema::VectorIndexConfigBuilder;
     ///
     /// let builder = VectorIndexConfigBuilder::new().with_ef(10);
     /// ```
@@ -803,7 +803,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfigBuilder;
+    /// use weaviate_community::models::schema::VectorIndexConfigBuilder;
     ///
     /// let builder = VectorIndexConfigBuilder::new().with_ef_construction(5);
     /// ```
@@ -819,7 +819,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfigBuilder;
+    /// use weaviate_community::models::schema::VectorIndexConfigBuilder;
     ///
     /// let builder = VectorIndexConfigBuilder::new().with_max_connections(5);
     /// ```
@@ -835,7 +835,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfigBuilder;
+    /// use weaviate_community::models::schema::VectorIndexConfigBuilder;
     ///
     /// let builder = VectorIndexConfigBuilder::new().with_dynamic_ef_min(5);
     /// ```
@@ -851,7 +851,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfigBuilder;
+    /// use weaviate_community::models::schema::VectorIndexConfigBuilder;
     ///
     /// let builder = VectorIndexConfigBuilder::new().with_dynamic_ef_max(10);
     /// ```
@@ -867,7 +867,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfigBuilder;
+    /// use weaviate_community::models::schema::VectorIndexConfigBuilder;
     ///
     /// let builder = VectorIndexConfigBuilder::new().with_dynamic_ef_factor(3);
     /// ```
@@ -883,7 +883,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfigBuilder;
+    /// use weaviate_community::models::schema::VectorIndexConfigBuilder;
     ///
     /// let builder = VectorIndexConfigBuilder::new().with_vector_cache_max_objects(3);
     /// ```
@@ -902,7 +902,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfigBuilder;
+    /// use weaviate_community::models::schema::VectorIndexConfigBuilder;
     ///
     /// let builder = VectorIndexConfigBuilder::new().with_flat_search_cut_off(3);
     /// ```
@@ -921,7 +921,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfigBuilder;
+    /// use weaviate_community::models::schema::VectorIndexConfigBuilder;
     ///
     /// let builder = VectorIndexConfigBuilder::new().with_cleanup_interval_seconds(3);
     /// ```
@@ -940,7 +940,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{
+    /// use weaviate_community::models::schema::{
     ///     VectorIndexConfigBuilder,
     ///     PqConfig
     /// };
@@ -960,7 +960,7 @@ impl VectorIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfigBuilder;
+    /// use weaviate_community::models::schema::VectorIndexConfigBuilder;
     ///
     /// let builder = VectorIndexConfigBuilder::new().with_skip(true);
     /// ```
@@ -974,14 +974,14 @@ impl VectorIndexConfigBuilder {
     /// # Example
     /// Using VectorIndexConfigBuilder
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfigBuilder;
+    /// use weaviate_community::models::schema::VectorIndexConfigBuilder;
     ///
     /// let config = VectorIndexConfigBuilder::new().build();
     /// ```
     ///
     /// Using VectorIndexConfig
     /// ```rust
-    /// use weaviate_community::collections::schema::VectorIndexConfig;
+    /// use weaviate_community::models::schema::VectorIndexConfig;
     ///
     /// let config = VectorIndexConfig::builder().build();
     /// ```
@@ -1034,7 +1034,7 @@ impl PqConfig {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PqConfigBuilder;
+    /// use weaviate_community::models::schema::PqConfigBuilder;
     ///
     /// let builder = PqConfigBuilder::new();
     /// ```
@@ -1061,7 +1061,7 @@ impl PqConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PqConfigBuilder;
+    /// use weaviate_community::models::schema::PqConfigBuilder;
     ///
     /// let builder = PqConfigBuilder::new();
     /// ```
@@ -1083,7 +1083,7 @@ impl PqConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PqConfigBuilder;
+    /// use weaviate_community::models::schema::PqConfigBuilder;
     ///
     /// let builder = PqConfigBuilder::new().with_enabled(true);
     /// ```
@@ -1099,7 +1099,7 @@ impl PqConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PqConfigBuilder;
+    /// use weaviate_community::models::schema::PqConfigBuilder;
     ///
     /// let builder = PqConfigBuilder::new().with_training_limit(100);
     /// ```
@@ -1115,7 +1115,7 @@ impl PqConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PqConfigBuilder;
+    /// use weaviate_community::models::schema::PqConfigBuilder;
     ///
     /// let builder = PqConfigBuilder::new().with_segments(100);
     /// ```
@@ -1131,7 +1131,7 @@ impl PqConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PqConfigBuilder;
+    /// use weaviate_community::models::schema::PqConfigBuilder;
     ///
     /// let builder = PqConfigBuilder::new().with_centroids(20);
     /// ```
@@ -1147,7 +1147,7 @@ impl PqConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{
+    /// use weaviate_community::models::schema::{
     ///     PqConfigBuilder,
     ///     EncoderConfig,
     ///     EncoderType
@@ -1168,7 +1168,7 @@ impl PqConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::PqConfigBuilder;
+    /// use weaviate_community::models::schema::PqConfigBuilder;
     ///
     /// let builder = PqConfigBuilder::new().with_bit_compression(true);
     /// ```
@@ -1182,14 +1182,14 @@ impl PqConfigBuilder {
     /// # Example
     /// Using PqConfigBuilder
     /// ```rust
-    /// use weaviate_community::collections::schema::PqConfigBuilder;
+    /// use weaviate_community::models::schema::PqConfigBuilder;
     ///
     /// let config = PqConfigBuilder::new().build();
     /// ```
     ///
     /// Using PqConfig
     /// ```rust
-    /// use weaviate_community::collections::schema::PqConfig;
+    /// use weaviate_community::models::schema::PqConfig;
     ///
     /// let config = PqConfig::builder().build();
     /// ```
@@ -1229,7 +1229,7 @@ impl EncoderConfig {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{EncoderConfig, EncoderType};
+    /// use weaviate_community::models::schema::{EncoderConfig, EncoderType};
     ///
     /// let builder = EncoderConfig::builder(EncoderType::KMEANS);
     /// ```
@@ -1254,7 +1254,7 @@ impl EncoderConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{EncoderConfigBuilder, EncoderType};
+    /// use weaviate_community::models::schema::{EncoderConfigBuilder, EncoderType};
     ///
     /// let builder = EncoderConfigBuilder::new(EncoderType::KMEANS);
     /// ```
@@ -1272,7 +1272,7 @@ impl EncoderConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{
+    /// use weaviate_community::models::schema::{
     ///     EncoderConfigBuilder,
     ///     EncoderType,
     ///     Distribution
@@ -1291,14 +1291,14 @@ impl EncoderConfigBuilder {
     /// # Example
     /// Using PqConfigBuilder
     /// ```rust
-    /// use weaviate_community::collections::schema::{EncoderConfigBuilder, EncoderType};
+    /// use weaviate_community::models::schema::{EncoderConfigBuilder, EncoderType};
     ///
     /// let config = EncoderConfigBuilder::new(EncoderType::KMEANS).build();
     /// ```
     ///
     /// Using PqConfig
     /// ```rust
-    /// use weaviate_community::collections::schema::{EncoderConfig, EncoderType};
+    /// use weaviate_community::models::schema::{EncoderConfig, EncoderType};
     ///
     /// let config = EncoderConfig::builder(EncoderType::KMEANS).build();
     /// ```
@@ -1389,7 +1389,7 @@ impl ShardingConfig {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::ShardingConfig;
+    /// use weaviate_community::models::schema::ShardingConfig;
     ///
     /// let builder = ShardingConfig::builder();
     /// ```
@@ -1418,7 +1418,7 @@ impl ShardingConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::ShardingConfigBuilder;
+    /// use weaviate_community::models::schema::ShardingConfigBuilder;
     ///
     /// let builder = ShardingConfigBuilder::new();
     /// ```
@@ -1442,7 +1442,7 @@ impl ShardingConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::ShardingConfigBuilder;
+    /// use weaviate_community::models::schema::ShardingConfigBuilder;
     ///
     /// let builder = ShardingConfigBuilder::new()
     ///     .with_virtual_per_physical(10);
@@ -1459,7 +1459,7 @@ impl ShardingConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::ShardingConfigBuilder;
+    /// use weaviate_community::models::schema::ShardingConfigBuilder;
     ///
     /// let builder = ShardingConfigBuilder::new()
     ///     .with_desired_count(10);
@@ -1476,7 +1476,7 @@ impl ShardingConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::ShardingConfigBuilder;
+    /// use weaviate_community::models::schema::ShardingConfigBuilder;
     ///
     /// let builder = ShardingConfigBuilder::new()
     ///     .with_actual_count(10);
@@ -1493,7 +1493,7 @@ impl ShardingConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::ShardingConfigBuilder;
+    /// use weaviate_community::models::schema::ShardingConfigBuilder;
     ///
     /// let builder = ShardingConfigBuilder::new()
     ///     .with_desired_virtual_count(10);
@@ -1513,7 +1513,7 @@ impl ShardingConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::ShardingConfigBuilder;
+    /// use weaviate_community::models::schema::ShardingConfigBuilder;
     ///
     /// let builder = ShardingConfigBuilder::new()
     ///     .with_actual_virtual_count(10);
@@ -1530,7 +1530,7 @@ impl ShardingConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{ShardingConfigBuilder, ShardingKey};
+    /// use weaviate_community::models::schema::{ShardingConfigBuilder, ShardingKey};
     ///
     /// let builder = ShardingConfigBuilder::new()
     ///     .with_key(ShardingKey::_ID);
@@ -1547,7 +1547,7 @@ impl ShardingConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{ShardingConfigBuilder, ShardingStrategy};
+    /// use weaviate_community::models::schema::{ShardingConfigBuilder, ShardingStrategy};
     ///
     /// let builder = ShardingConfigBuilder::new()
     ///     .with_strategy(ShardingStrategy::HASH);
@@ -1564,7 +1564,7 @@ impl ShardingConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{ShardingConfigBuilder, ShardingFunction};
+    /// use weaviate_community::models::schema::{ShardingConfigBuilder, ShardingFunction};
     ///
     /// let builder = ShardingConfigBuilder::new()
     ///     .with_function(ShardingFunction::MURMUR3);
@@ -1579,14 +1579,14 @@ impl ShardingConfigBuilder {
     /// # Example
     /// Using PqConfigBuilder
     /// ```rust
-    /// use weaviate_community::collections::schema::ShardingConfigBuilder;
+    /// use weaviate_community::models::schema::ShardingConfigBuilder;
     ///
     /// let config = ShardingConfigBuilder::new().build();
     /// ```
     ///
     /// Using PqConfig
     /// ```rust
-    /// use weaviate_community::collections::schema::ShardingConfig;
+    /// use weaviate_community::models::schema::ShardingConfig;
     ///
     /// let config = ShardingConfig::builder().build();
     /// ```
@@ -1654,7 +1654,7 @@ impl MultiTenancyConfig {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::MultiTenancyConfig;
+    /// use weaviate_community::models::schema::MultiTenancyConfig;
     ///
     /// let config = MultiTenancyConfig::new(true);
     /// ```
@@ -1694,7 +1694,7 @@ impl InvertedIndexConfig {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::InvertedIndexConfig;
+    /// use weaviate_community::models::schema::InvertedIndexConfig;
     ///
     /// let builder = InvertedIndexConfig::builder();
     /// ```
@@ -1721,7 +1721,7 @@ impl InvertedIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::InvertedIndexConfigBuilder;
+    /// use weaviate_community::models::schema::InvertedIndexConfigBuilder;
     ///
     /// let builder = InvertedIndexConfigBuilder::new();
     /// ```
@@ -1743,7 +1743,7 @@ impl InvertedIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{InvertedIndexConfigBuilder, StopwordsConfig};
+    /// use weaviate_community::models::schema::{InvertedIndexConfigBuilder, StopwordsConfig};
     ///
     /// let stopwords = StopwordsConfig::builder().build();
     /// let builder = InvertedIndexConfigBuilder::new().with_stopwords(stopwords);
@@ -1760,7 +1760,7 @@ impl InvertedIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::InvertedIndexConfigBuilder;
+    /// use weaviate_community::models::schema::InvertedIndexConfigBuilder;
     ///
     /// let builder = InvertedIndexConfigBuilder::new().with_index_timestamps(true);
     /// ```
@@ -1776,7 +1776,7 @@ impl InvertedIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::InvertedIndexConfigBuilder;
+    /// use weaviate_community::models::schema::InvertedIndexConfigBuilder;
     ///
     /// let builder = InvertedIndexConfigBuilder::new().with_index_null_state(true);
     /// ```
@@ -1792,7 +1792,7 @@ impl InvertedIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::InvertedIndexConfigBuilder;
+    /// use weaviate_community::models::schema::InvertedIndexConfigBuilder;
     ///
     /// let builder = InvertedIndexConfigBuilder::new().with_index_property_length(true);
     /// ```
@@ -1811,7 +1811,7 @@ impl InvertedIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{InvertedIndexConfigBuilder, Bm25};
+    /// use weaviate_community::models::schema::{InvertedIndexConfigBuilder, Bm25};
     ///
     /// let bm25 = Bm25::new(10.0, 10.0);
     /// let builder = InvertedIndexConfigBuilder::new().with_bm25(bm25);
@@ -1828,7 +1828,7 @@ impl InvertedIndexConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::InvertedIndexConfigBuilder;
+    /// use weaviate_community::models::schema::InvertedIndexConfigBuilder;
     ///
     /// let builder = InvertedIndexConfigBuilder::new().with_cleanup_interval_seconds(60);
     /// ```
@@ -1845,14 +1845,14 @@ impl InvertedIndexConfigBuilder {
     /// # Example
     /// Using InvertedIndexConfigBuilder
     /// ```rust
-    /// use weaviate_community::collections::schema::InvertedIndexConfigBuilder;
+    /// use weaviate_community::models::schema::InvertedIndexConfigBuilder;
     ///
     /// let config = InvertedIndexConfigBuilder::new().build();
     /// ```
     ///
     /// Using InvertedIndexConfig
     /// ```rust
-    /// use weaviate_community::collections::schema::InvertedIndexConfig;
+    /// use weaviate_community::models::schema::InvertedIndexConfig;
     ///
     /// let config = InvertedIndexConfig::builder().build();
     /// ```
@@ -1890,7 +1890,7 @@ impl StopwordsConfig {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::StopwordsConfig;
+    /// use weaviate_community::models::schema::StopwordsConfig;
     ///
     /// let builder = StopwordsConfig::builder();
     /// ```
@@ -1914,7 +1914,7 @@ impl StopwordsConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::StopwordsConfigBuilder;
+    /// use weaviate_community::models::schema::StopwordsConfigBuilder;
     ///
     /// let builder = StopwordsConfigBuilder::new();
     /// ```
@@ -1933,7 +1933,7 @@ impl StopwordsConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{StopwordsConfigBuilder, StopwordPreset};
+    /// use weaviate_community::models::schema::{StopwordsConfigBuilder, StopwordPreset};
     ///
     /// let builder = StopwordsConfigBuilder::new().with_preset(StopwordPreset::EN);
     /// ```
@@ -1949,7 +1949,7 @@ impl StopwordsConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::StopwordsConfigBuilder;
+    /// use weaviate_community::models::schema::StopwordsConfigBuilder;
     ///
     /// let builder = StopwordsConfigBuilder::new().with_additions(vec!["word"]);
     /// ```
@@ -1966,7 +1966,7 @@ impl StopwordsConfigBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::StopwordsConfigBuilder;
+    /// use weaviate_community::models::schema::StopwordsConfigBuilder;
     ///
     /// let builder = StopwordsConfigBuilder::new().with_removals(vec!["word"]);
     /// ```
@@ -1981,14 +1981,14 @@ impl StopwordsConfigBuilder {
     /// # Example
     /// Using StopwordsConfigBuilder
     /// ```rust
-    /// use weaviate_community::collections::schema::StopwordsConfigBuilder;
+    /// use weaviate_community::models::schema::StopwordsConfigBuilder;
     ///
     /// let config = StopwordsConfigBuilder::new().build();
     /// ```
     ///
     /// Using StopwordsConfig
     /// ```rust
-    /// use weaviate_community::collections::schema::StopwordsConfig;
+    /// use weaviate_community::models::schema::StopwordsConfig;
     ///
     /// let config = StopwordsConfig::builder().build();
     /// ```
@@ -2026,7 +2026,7 @@ impl ReplicationConfig {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::ReplicationConfig;
+    /// use weaviate_community::models::schema::ReplicationConfig;
     ///
     /// let config = ReplicationConfig::new(3);
     /// ```
@@ -2050,7 +2050,7 @@ impl Tenants {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{Tenants, Tenant};
+    /// use weaviate_community::models::schema::{Tenants, Tenant};
     ///
     /// let config = Tenants::new(
     ///     vec![
@@ -2090,7 +2090,7 @@ impl Tenant {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::Tenant;
+    /// use weaviate_community::models::schema::Tenant;
     ///
     /// let builder = Tenant::builder("abcde");
     /// ```
@@ -2115,7 +2115,7 @@ impl TenantBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::TenantBuilder;
+    /// use weaviate_community::models::schema::TenantBuilder;
     ///
     /// let builder = TenantBuilder::new("abcde");
     /// ```
@@ -2133,7 +2133,7 @@ impl TenantBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{TenantBuilder, ActivityStatus};
+    /// use weaviate_community::models::schema::{TenantBuilder, ActivityStatus};
     ///
     /// let builder = TenantBuilder::new("abcde").with_activity_status(ActivityStatus::HOT);
     /// ```
@@ -2147,14 +2147,14 @@ impl TenantBuilder {
     /// # Example
     /// Using TenantBuilder
     /// ```rust
-    /// use weaviate_community::collections::schema::TenantBuilder;
+    /// use weaviate_community::models::schema::TenantBuilder;
     ///
     /// let config = TenantBuilder::new("abcde").build();
     /// ```
     ///
     /// Using Tenant
     /// ```rust
-    /// use weaviate_community::collections::schema::Tenant;
+    /// use weaviate_community::models::schema::Tenant;
     ///
     /// let config = Tenant::builder("abcde").build();
     /// ```
@@ -2191,7 +2191,7 @@ impl Bm25 {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::Bm25;
+    /// use weaviate_community::models::schema::Bm25;
     ///
     /// let config = Bm25::new(10.0, 10.0);
     /// ```
@@ -2233,7 +2233,7 @@ impl Shards {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{Shards, Shard, ShardStatus};
+    /// use weaviate_community::models::schema::{Shards, Shard, ShardStatus};
     ///
     /// let shards = Shards::new(
     ///     vec![
@@ -2266,7 +2266,7 @@ impl Shard {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::schema::{Shard, ShardStatus};
+    /// use weaviate_community::models::schema::{Shard, ShardStatus};
     ///
     /// let shard = Shard::new("abcd", ShardStatus::READY);
     /// ```

@@ -1,7 +1,7 @@
 use reqwest::Url;
 
-use crate::collections::error::SchemaError;
-use crate::collections::schema::{
+use crate::models::error::SchemaError;
+use crate::models::schema::{
     Class, Classes, Property, Shard, ShardStatus, Shards, Tenant, Tenants,
 };
 use crate::WeaviateClient;
@@ -17,7 +17,7 @@ pub struct Schema<'a> {
 impl<'a> Schema<'a> {
     /// Create a new Schema object. The schema object is intended to like inside the WeaviateClient
     /// and be called through the WeaviateClient.
-    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+    pub(crate) fn new(client: &'a WeaviateClient) -> Self {
         Schema { client }
     }
 
@@ -336,7 +336,7 @@ mod tests {
     // Tests currently require a weaviate instance to be running on localhost, as I have not yet
     // implemented anything to mock the database. In future, actual tests will run as integration
     // tests in a container as part of the CICD process.
-    use crate::collections::schema::{
+    use crate::models::schema::{
         ActivityStatus, Class, ClassBuilder, Classes, Property, Shard, ShardStatus, Shards, Tenant,
         Tenants,
     };

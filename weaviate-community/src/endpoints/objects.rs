@@ -1,5 +1,5 @@
-use crate::collections::error::QueryError;
-use crate::collections::objects::{
+use crate::models::error::QueryError;
+use crate::models::objects::{
     ConsistencyLevel, MultiObjects, Object, ObjectListParameters, Reference,
 };
 use crate::WeaviateClient;
@@ -18,7 +18,7 @@ impl<'a> Objects<'a> {
     /// Create a new Objects endpoint orchestrator for the client.
     ///
     /// Should not be done manually.
-    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+    pub(crate) fn new(client: &'a WeaviateClient) -> Self {
         Objects { client }
     }
 
@@ -40,7 +40,7 @@ impl<'a> Objects<'a> {
     /// # Example
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::objects::ObjectListParameters;
+    /// use weaviate_community::models::objects::ObjectListParameters;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -131,7 +131,7 @@ impl<'a> Objects<'a> {
     /// # Example
     /// ```
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::objects::Object;
+    /// use weaviate_community::models::objects::Object;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -505,7 +505,7 @@ impl<'a> Objects<'a> {
     /// ```
     /// use uuid::Uuid;
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::objects::Reference;
+    /// use weaviate_community::models::objects::Reference;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -655,7 +655,7 @@ impl<'a> Objects<'a> {
     /// ```
     /// use uuid::Uuid;
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::objects::Reference;
+    /// use weaviate_community::models::objects::Reference;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -723,7 +723,7 @@ mod tests {
     use uuid::Uuid;
 
     use crate::{
-        collections::objects::{MultiObjects, Object, ObjectListParameters, Reference},
+        models::objects::{MultiObjects, Object, ObjectListParameters, Reference},
         WeaviateClient,
     };
 

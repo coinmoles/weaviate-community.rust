@@ -1,11 +1,11 @@
 use reqwest::Url;
 use std::error::Error;
 
-use crate::collections::backups::{
+use crate::models::backups::{
     BackupBackends, BackupCreateRequest, BackupResponse, BackupRestoreRequest, BackupStatus,
     BackupStatusResponse,
 };
-use crate::collections::error::BackupError;
+use crate::models::error::BackupError;
 use crate::WeaviateClient;
 
 /// All backup related endpoints and functionality described in
@@ -16,7 +16,7 @@ pub struct Backups<'a> {
 }
 
 impl<'a> Backups<'a> {
-    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+    pub(crate) fn new(client: &'a WeaviateClient) -> Self {
         Backups { client }
     }
 
@@ -36,7 +36,7 @@ impl<'a> Backups<'a> {
     /// Creating a backup to the filesystem, waiting for completion
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::backups::{BackupBackends, BackupCreateRequest};
+    /// use weaviate_community::models::backups::{BackupBackends, BackupCreateRequest};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -88,7 +88,7 @@ impl<'a> Backups<'a> {
     /// # Examples
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::backups::BackupBackends;
+    /// use weaviate_community::models::backups::BackupBackends;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -132,7 +132,7 @@ impl<'a> Backups<'a> {
     /// Restore a backup from the filesystem, waiting for completion
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::backups::{BackupBackends, BackupRestoreRequest};
+    /// use weaviate_community::models::backups::{BackupBackends, BackupRestoreRequest};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -201,7 +201,7 @@ impl<'a> Backups<'a> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        collections::backups::{
+        models::backups::{
             BackupBackends, BackupCreateRequest, BackupResponse, BackupRestoreRequest,
             BackupStatus, BackupStatusResponse,
         },

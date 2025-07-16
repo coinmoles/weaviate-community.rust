@@ -1,5 +1,5 @@
-use crate::collections::error::NodesError;
-use crate::collections::nodes::MultiNodes;
+use crate::models::error::NodesError;
+use crate::models::nodes::MultiNodes;
 use crate::WeaviateClient;
 use reqwest::Url;
 use std::error::Error;
@@ -13,7 +13,7 @@ pub struct Nodes<'a> {
 
 impl<'a> Nodes<'a> {
     /// Create a new instance of the Nodes endpoint struct. Should only be done by the parent client.
-    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+    pub(crate) fn new(client: &'a WeaviateClient) -> Self {
         Nodes { client }
     }
 
@@ -58,7 +58,7 @@ impl<'a> Nodes<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{collections::nodes::MultiNodes, WeaviateClient};
+    use crate::{models::nodes::MultiNodes, WeaviateClient};
 
     async fn get_test_harness() -> (mockito::ServerGuard, WeaviateClient) {
         let mock_server = mockito::Server::new_async().await;

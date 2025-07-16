@@ -16,7 +16,7 @@ impl MultiObjects {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::{Object, MultiObjects};
+    /// use weaviate_community::models::objects::{Object, MultiObjects};
     ///
     /// let object = Object::builder("Object", serde_json::json![{}]).build();
     /// let objects = MultiObjects::new(vec![object]);
@@ -66,7 +66,7 @@ impl Object {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::Object;
+    /// use weaviate_community::models::objects::Object;
     ///
     /// let builder = Object::builder("Object", serde_json::json![{}]);
     /// ```
@@ -100,7 +100,7 @@ impl ObjectBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectBuilder;
+    /// use weaviate_community::models::objects::ObjectBuilder;
     ///
     /// let builder = ObjectBuilder::new("Object", serde_json::json![{}]);
     /// ```
@@ -124,7 +124,7 @@ impl ObjectBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectBuilder;
+    /// use weaviate_community::models::objects::ObjectBuilder;
     /// use uuid::Uuid;
     ///
     /// let builder = ObjectBuilder::new("Object", serde_json::json![{}]).with_id(Uuid::new_v4());
@@ -141,7 +141,7 @@ impl ObjectBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectBuilder;
+    /// use weaviate_community::models::objects::ObjectBuilder;
     ///
     /// let builder = ObjectBuilder::new("Object", serde_json::json![{}])
     ///     .with_vector(vec![1.0, 1.0, 1.0]);
@@ -158,7 +158,7 @@ impl ObjectBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectBuilder;
+    /// use weaviate_community::models::objects::ObjectBuilder;
     ///
     /// let builder = ObjectBuilder::new("Object", serde_json::json![{}])
     ///     .with_tenant("TENANT_A");
@@ -175,7 +175,7 @@ impl ObjectBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectBuilder;
+    /// use weaviate_community::models::objects::ObjectBuilder;
     ///
     /// let builder = ObjectBuilder::new("Object", serde_json::json![{}])
     ///     .with_vector_weights(10);
@@ -190,14 +190,14 @@ impl ObjectBuilder {
     /// # Example
     /// Using ObjectBuilder
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectBuilder;
+    /// use weaviate_community::models::objects::ObjectBuilder;
     ///
     /// let object = ObjectBuilder::new("Object", serde_json::json![{}]).build();
     /// ```
     ///
     /// Using Object
     /// ```rust
-    /// use weaviate_community::collections::objects::Object;
+    /// use weaviate_community::models::objects::Object;
     ///
     /// let object = Object::builder("Object", serde_json::json![{}]).build();
     /// ```
@@ -229,7 +229,7 @@ impl OrderBy {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::OrderBy;
+    /// use weaviate_community::models::objects::OrderBy;
     ///
     /// let val = OrderBy::ASC.value();
     /// ```
@@ -262,7 +262,7 @@ impl ConsistencyLevel {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ConsistencyLevel;
+    /// use weaviate_community::models::objects::ConsistencyLevel;
     ///
     /// let val = ConsistencyLevel::ONE.value();
     /// ```
@@ -291,7 +291,7 @@ impl ObjectListParameters {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectListParameters;
+    /// use weaviate_community::models::objects::ObjectListParameters;
     ///
     /// let builder = ObjectListParameters::new();
     /// ```
@@ -305,7 +305,7 @@ impl ObjectListParameters {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectListParameters;
+    /// use weaviate_community::models::objects::ObjectListParameters;
     ///
     /// let builder = ObjectListParameters::builder();
     /// ```
@@ -332,7 +332,7 @@ impl ObjectListParametersBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectListParametersBuilder;
+    /// use weaviate_community::models::objects::ObjectListParametersBuilder;
     ///
     /// let builder = ObjectListParametersBuilder::new();
     /// ```
@@ -347,7 +347,7 @@ impl ObjectListParametersBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectListParametersBuilder;
+    /// use weaviate_community::models::objects::ObjectListParametersBuilder;
     ///
     /// let builder = ObjectListParametersBuilder::new()
     ///     .with_class_name("Article");
@@ -366,7 +366,7 @@ impl ObjectListParametersBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectListParametersBuilder;
+    /// use weaviate_community::models::objects::ObjectListParametersBuilder;
     ///
     /// let builder = ObjectListParametersBuilder::new()
     ///     .with_limit(25);
@@ -386,7 +386,7 @@ impl ObjectListParametersBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectListParametersBuilder;
+    /// use weaviate_community::models::objects::ObjectListParametersBuilder;
     ///
     /// let builder = ObjectListParametersBuilder::new()
     ///     .with_offset(2);
@@ -407,7 +407,7 @@ impl ObjectListParametersBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectListParametersBuilder;
+    /// use weaviate_community::models::objects::ObjectListParametersBuilder;
     ///
     /// let builder = ObjectListParametersBuilder::new()
     ///     .with_after("dcfbe06f-fb69-48d7-9a13-e8e78e422486");
@@ -431,7 +431,7 @@ impl ObjectListParametersBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectListParametersBuilder;
+    /// use weaviate_community::models::objects::ObjectListParametersBuilder;
     ///
     /// let builder = ObjectListParametersBuilder::new().with_include("classification");
     /// ```
@@ -447,7 +447,7 @@ impl ObjectListParametersBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectListParametersBuilder;
+    /// use weaviate_community::models::objects::ObjectListParametersBuilder;
     ///
     /// let builder = ObjectListParametersBuilder::new().with_sort(vec!["title"]);
     /// ```
@@ -464,7 +464,7 @@ impl ObjectListParametersBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectListParametersBuilder;
+    /// use weaviate_community::models::objects::ObjectListParametersBuilder;
     ///
     /// let builder = ObjectListParametersBuilder::new().with_order(vec!["asc"]);
     /// ```
@@ -479,14 +479,14 @@ impl ObjectListParametersBuilder {
     /// # Example
     /// Using ObjectListParametersBuilder
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectListParametersBuilder;
+    /// use weaviate_community::models::objects::ObjectListParametersBuilder;
     ///
     /// let object = ObjectListParametersBuilder::new().build();
     /// ```
     ///
     /// Using ObjectListParameters
     /// ```rust
-    /// use weaviate_community::collections::objects::ObjectListParameters;
+    /// use weaviate_community::models::objects::ObjectListParameters;
     ///
     /// let object = ObjectListParameters::builder().build();
     /// ```
@@ -512,7 +512,7 @@ impl References {
     /// # Example
     /// ```rust
     /// use uuid::Uuid;
-    /// use weaviate_community::collections::objects::{References, Reference};
+    /// use weaviate_community::models::objects::{References, Reference};
     ///
     /// let uuid1 = Uuid::parse_str("12345678-1234-1234-1234-123456789012").unwrap();
     /// let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();
@@ -551,7 +551,7 @@ impl Reference {
     /// # Example
     /// ```rust
     /// use uuid::Uuid;
-    /// use weaviate_community::collections::objects::Reference;
+    /// use weaviate_community::models::objects::Reference;
     ///
     /// let uuid1 = Uuid::parse_str("12345678-1234-1234-1234-123456789012").unwrap();
     /// let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();
@@ -589,7 +589,7 @@ impl Reference {
     /// # Example
     /// ```rust
     /// use uuid::Uuid;
-    /// use weaviate_community::collections::objects::Reference;
+    /// use weaviate_community::models::objects::Reference;
     ///
     /// let uuid1 = Uuid::parse_str("12345678-1234-1234-1234-123456789012").unwrap();
     /// let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();
@@ -638,7 +638,7 @@ impl ReferenceBuilder {
     /// # Example
     /// ```rust
     /// use uuid::Uuid;
-    /// use weaviate_community::collections::objects::ReferenceBuilder;
+    /// use weaviate_community::models::objects::ReferenceBuilder;
     ///
     /// let uuid1 = Uuid::parse_str("12345678-1234-1234-1234-123456789012").unwrap();
     /// let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();
@@ -677,8 +677,8 @@ impl ReferenceBuilder {
     /// # Example
     /// ```rust
     /// use uuid::Uuid;
-    /// use weaviate_community::collections::objects::ConsistencyLevel;
-    /// use weaviate_community::collections::objects::ReferenceBuilder;
+    /// use weaviate_community::models::objects::ConsistencyLevel;
+    /// use weaviate_community::models::objects::ReferenceBuilder;
     ///
     /// let uuid1 = Uuid::parse_str("12345678-1234-1234-1234-123456789012").unwrap();
     /// let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();
@@ -706,7 +706,7 @@ impl ReferenceBuilder {
     /// # Example
     /// ```rust
     /// use uuid::Uuid;
-    /// use weaviate_community::collections::objects::ReferenceBuilder;
+    /// use weaviate_community::models::objects::ReferenceBuilder;
     ///
     /// let uuid1 = Uuid::parse_str("12345678-1234-1234-1234-123456789012").unwrap();
     /// let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();
@@ -729,7 +729,7 @@ impl ReferenceBuilder {
     /// Using ReferenceBuilder
     /// ```rust
     /// use uuid::Uuid;
-    /// use weaviate_community::collections::objects::ReferenceBuilder;
+    /// use weaviate_community::models::objects::ReferenceBuilder;
     ///
     /// let uuid1 = Uuid::parse_str("12345678-1234-1234-1234-123456789012").unwrap();
     /// let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();
@@ -745,7 +745,7 @@ impl ReferenceBuilder {
     /// Using ObjectListParameters
     /// ```rust
     /// use uuid::Uuid;
-    /// use weaviate_community::collections::objects::Reference;
+    /// use weaviate_community::models::objects::Reference;
     ///
     /// let uuid1 = Uuid::parse_str("12345678-1234-1234-1234-123456789012").unwrap();
     /// let uuid2 = Uuid::parse_str("20ffc68d-986b-5e71-a680-228dba18d7ef").unwrap();

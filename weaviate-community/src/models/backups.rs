@@ -21,7 +21,7 @@ impl BackupBackends {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupBackends;
+    /// use weaviate_community::models::backups::BackupBackends;
     ///
     /// let s3 = BackupBackends::S3.value();
     /// ```
@@ -54,7 +54,7 @@ impl BackupCreateRequest {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupCreateRequest;
+    /// use weaviate_community::models::backups::BackupCreateRequest;
     ///
     /// let builder = BackupCreateRequest::builder("my-backup");
     /// ```
@@ -80,7 +80,7 @@ impl BackupCreateRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupCreateRequestBuilder;
+    /// use weaviate_community::models::backups::BackupCreateRequestBuilder;
     ///
     /// let builder = BackupCreateRequestBuilder::new("my-backup");
     /// ```
@@ -99,7 +99,7 @@ impl BackupCreateRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupCreateRequestBuilder;
+    /// use weaviate_community::models::backups::BackupCreateRequestBuilder;
     ///
     /// let builder = BackupCreateRequestBuilder::new("my-backup").with_include(vec!["Article"]);
     /// ```
@@ -116,7 +116,7 @@ impl BackupCreateRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupCreateRequestBuilder;
+    /// use weaviate_community::models::backups::BackupCreateRequestBuilder;
     ///
     /// let builder = BackupCreateRequestBuilder::new("my-backup").with_exclude(vec!["Article"]);
     /// ```
@@ -131,14 +131,14 @@ impl BackupCreateRequestBuilder {
     /// # Example
     /// Using BackupCreateRequestBuilder
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupCreateRequestBuilder;
+    /// use weaviate_community::models::backups::BackupCreateRequestBuilder;
     ///
     /// let builder = BackupCreateRequestBuilder::new("new-id").build();
     /// ```
     ///
     /// Using BackupCreateRequest
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupCreateRequest;
+    /// use weaviate_community::models::backups::BackupCreateRequest;
     ///
     /// let builder = BackupCreateRequest::builder("new-id").build();
     /// ```
@@ -166,7 +166,7 @@ impl BackupRestoreRequest {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupRestoreRequest;
+    /// use weaviate_community::models::backups::BackupRestoreRequest;
     ///
     /// let builder = BackupRestoreRequest::builder();
     /// ```
@@ -189,7 +189,7 @@ impl BackupRestoreRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupRestoreRequestBuilder;
+    /// use weaviate_community::models::backups::BackupRestoreRequestBuilder;
     ///
     /// let builder = BackupRestoreRequestBuilder::new();
     /// ```
@@ -207,7 +207,7 @@ impl BackupRestoreRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupRestoreRequestBuilder;
+    /// use weaviate_community::models::backups::BackupRestoreRequestBuilder;
     ///
     /// let builder = BackupRestoreRequestBuilder::new().with_include(vec!["Article"]);
     /// ```
@@ -224,7 +224,7 @@ impl BackupRestoreRequestBuilder {
     ///
     /// # Example
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupRestoreRequestBuilder;
+    /// use weaviate_community::models::backups::BackupRestoreRequestBuilder;
     ///
     /// let builder = BackupRestoreRequestBuilder::new().with_exclude(vec!["Article"]);
     /// ```
@@ -239,14 +239,14 @@ impl BackupRestoreRequestBuilder {
     /// # Example
     /// Using BackupRestoreRequestBuilder
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupRestoreRequestBuilder;
+    /// use weaviate_community::models::backups::BackupRestoreRequestBuilder;
     ///
     /// let builder = BackupRestoreRequestBuilder::new().build();
     /// ```
     ///
     /// Using BackupRestoreRequest
     /// ```rust
-    /// use weaviate_community::collections::backups::BackupRestoreRequest;
+    /// use weaviate_community::models::backups::BackupRestoreRequest;
     ///
     /// let builder = BackupRestoreRequest::builder().build();
     /// ```
