@@ -1,25 +1,30 @@
 use crate::collections::error::NodesError;
 use crate::collections::nodes::MultiNodes;
+use crate::WeaviateClient;
 use reqwest::Url;
 use std::error::Error;
-use std::sync::Arc;
 
 /// All nodes related endpoints and functionality described in
 /// [Weaviate nodes API documentation](https://weaviate.io/developers/weaviate/api/rest/nodes)
 #[derive(Debug)]
-pub struct Nodes {
-    /// The full URL to the Meta endpoint
-    endpoint: Url,
-    /// The sub-client which executes the requests - temporary
-    client: Arc<reqwest::Client>,
+pub struct Nodes<'a> {
+    client: &'a WeaviateClient,
 }
 
-impl Nodes {
-    /// Create a new instance of the Nodes endpoint struct. Should only be done by the parent
-    /// client.
-    pub(super) fn new(url: &Url, client: Arc<reqwest::Client>) -> Result<Self, Box<dyn Error>> {
-        let endpoint = url.join("/v1/nodes/")?;
-        Ok(Nodes { endpoint, client })
+impl<'a> Nodes<'a> {
+    /// Create a new instance of the Nodes endpoint struct. Should only be done by the parent client.
+    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+        Nodes { client }
+    }
+
+    /// Get the endpoint for nodes
+    ///
+    /// # Returns
+    /// A `Result` containing the URL for the nodes endpoint or a `ParseError` if the URL is invalid.
+    ///
+    /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
+    fn endpoint(&self) -> Result<Url, url::ParseError> {
+        self.client.base_url.join("/v1/nodes/")
     }
 
     /// Get the node status for all nodes in the Weaviate instance.
@@ -31,12 +36,13 @@ impl Nodes {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>>{
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
-    ///     let res = client.nodes.get_nodes_status().await?;
+    ///     let res = client.nodes().get_nodes_status().await?;
     ///     Ok(())
     /// }
     /// ```
     pub async fn get_nodes_status(&self) -> Result<MultiNodes, Box<dyn Error>> {
-        let res = self.client.get(self.endpoint.clone()).send().await?;
+        let endpoint = self.endpoint()?;
+        let res = self.client.get(endpoint).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
                 let res: MultiNodes = res.json().await?;
@@ -179,7 +185,7 @@ mod tests {
         let nodes = test_nodes();
         let nodes_str = serde_json::to_string(&nodes).unwrap();
         let mock = mock_get(&mut mock_server, "/v1/nodes/", 200, &nodes_str).await;
-        let res = client.nodes.get_nodes_status().await;
+        let res = client.nodes().get_nodes_status().await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(res.unwrap().nodes.len(), nodes.nodes.len());
@@ -189,7 +195,7 @@ mod tests {
     async fn test_get_nodes_status_err() {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/v1/nodes/", 404, "").await;
-        let res = client.nodes.get_nodes_status().await;
+        let res = client.nodes().get_nodes_status().await;
         mock.assert();
         assert!(res.is_err());
     }

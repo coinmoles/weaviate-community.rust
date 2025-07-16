@@ -1,23 +1,31 @@
-use reqwest::Url;
-use std::error::Error;
-use std::sync::Arc;
 use crate::collections::error::ModuleError;
 use crate::collections::modules::{ContextionaryConcept, ContextionaryExtension};
+use crate::WeaviateClient;
+use reqwest::Url;
+use std::error::Error;
 
 /// All contextionary module related endpoints and functionality described in
 /// [Weaviate contextionary API documentation](https://weaviate.io/developers/weaviate/modules/retriever-vectorizer-modules/text2vec-contextionary)
 #[derive(Debug)]
-pub struct Modules {
-    endpoint: Url,
-    client: Arc<reqwest::Client>,
+pub struct Modules<'a> {
+    client: &'a WeaviateClient,
 }
 
-impl Modules {
-    /// Create a new Modules object. The modules object is intended to like inside the 
+impl<'a> Modules<'a> {
+    /// Create a new Modules object. The modules object is intended to like inside the
     /// WeaviateClient and be called through the WeaviateClient.
-    pub(super) fn new(url: &Url, client: Arc<reqwest::Client>) -> Result<Self, Box<dyn Error>> {
-        let endpoint = url.join("/v1/modules/")?;
-        Ok(Modules { endpoint, client })
+    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+        Modules { client }
+    }
+
+    /// Get the endpoint for modules
+    ///
+    /// # Returns
+    /// A `Result` containing the URL for the modules endpoint or a `ParseError` if the URL is invalid.
+    ///
+    /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
+    fn endpoint(&self) -> Result<Url, url::ParseError> {
+        self.client.base_url.join("/v1/modules/")
     }
 
     /// Get a concept from text2vec-contextionary.
@@ -32,7 +40,7 @@ impl Modules {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
-    ///     let res = client.modules.contextionary_get_concept("concept").await;
+    ///     let res = client.modules().contextionary_get_concept("concept").await;
     ///
     ///     Ok(())
     /// }
@@ -43,7 +51,7 @@ impl Modules {
     ) -> Result<ContextionaryConcept, Box<dyn Error>> {
         let mut endpoint = String::from("text2vec-contextionary/concepts/");
         endpoint.push_str(concept);
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let endpoint = self.endpoint()?.join(&endpoint)?;
         let res = self.client.get(endpoint).send().await?;
 
         match res.status() {
@@ -71,7 +79,7 @@ impl Modules {
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
     ///     let ext = ContextionaryExtension::new("concept", "description", 1.0);
-    ///     let res = client.modules.contextionary_extend(ext).await;
+    ///     let res = client.modules().contextionary_extend(ext).await;
     ///
     ///     Ok(())
     /// }
@@ -80,13 +88,8 @@ impl Modules {
         &self,
         concept: ContextionaryExtension,
     ) -> Result<ContextionaryExtension, Box<dyn Error>> {
-        let endpoint = self.endpoint.join("text2vec-contextionary/extensions")?;
-        let res = self
-            .client
-            .post(endpoint)
-            .json(&concept)
-            .send()
-            .await?;
+        let endpoint = self.endpoint()?.join("text2vec-contextionary/extensions")?;
+        let res = self.client.post(endpoint).json(&concept).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
                 let res: ContextionaryExtension = res.json().await?;
@@ -99,11 +102,7 @@ impl Modules {
     /// Get the error message for the endpoint
     ///
     /// Made to reduce the boilerplate error message building
-    async fn get_err_msg(
-        &self,
-        endpoint: &str,
-        res: reqwest::Response
-    ) -> Box<ModuleError> {
+    async fn get_err_msg(&self, endpoint: &str, res: reqwest::Response) -> Box<ModuleError> {
         let status_code = res.status();
         let r_str = match res.json::<serde_json::Value>().await {
             Ok(json) => format!(
@@ -182,7 +181,7 @@ mod tests {
             &get_mock_concept_response(),
         )
         .await;
-        let res = client.modules.contextionary_get_concept("test").await;
+        let res = client.modules().contextionary_get_concept("test").await;
         mock.assert();
         assert!(res.is_ok());
     }
@@ -197,7 +196,7 @@ mod tests {
             "",
         )
         .await;
-        let res = client.modules.contextionary_get_concept("test").await;
+        let res = client.modules().contextionary_get_concept("test").await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -214,7 +213,7 @@ mod tests {
             &ext_str,
         )
         .await;
-        let res = client.modules.contextionary_extend(ext).await;
+        let res = client.modules().contextionary_extend(ext).await;
         mock.assert();
         assert!(res.is_ok());
     }
@@ -230,7 +229,7 @@ mod tests {
         )
         .await;
         let res = client
-            .modules
+            .modules()
             .contextionary_extend(ContextionaryExtension::new("test", "test", 1.0))
             .await;
         mock.assert();

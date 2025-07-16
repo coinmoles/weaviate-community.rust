@@ -26,26 +26,15 @@ pub use self::schema::Schema;
 use collections::auth::{ApiKey, AuthApiKey};
 
 use std::error::Error;
-use std::sync::Arc;
 
 use reqwest::header::{HeaderMap, AUTHORIZATION};
-use reqwest::Url;
+use reqwest::{IntoUrl, Url};
 
 /// An asynchronous `WeaviateClient` to interact with a Weaviate database.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WeaviateClient {
     pub base_url: Url,
-    client: Arc<reqwest::Client>,
-    pub schema: Schema,
-    pub objects: Objects,
-    pub batch: Batch,
-    pub backups: Backups,
-    pub classification: Classification,
-    pub meta: Meta,
-    pub nodes: Nodes,
-    pub oidc: Oidc,
-    pub modules: Modules,
-    pub query: Query,
+    client: reqwest::Client,
 }
 
 impl WeaviateClient {
@@ -93,7 +82,7 @@ impl WeaviateClient {
         auth_client_secret: Option<AuthApiKey>,
         api_keys: Option<Vec<ApiKey>>,
     ) -> Result<Self, Box<dyn Error>> {
-        let base = Url::parse(url)?;
+        let base_url = Url::parse(url)?;
         let mut client_builder = reqwest::Client::builder();
 
         let mut headers = HeaderMap::new();
@@ -116,32 +105,9 @@ impl WeaviateClient {
         client_builder = client_builder.default_headers(headers);
 
         // Each of the endpoint categories hold a strong ref to the main client.
-        let client = Arc::new(client_builder.build()?);
-        let schema = Schema::new(&base, Arc::clone(&client))?;
-        let objects = Objects::new(&base, Arc::clone(&client))?;
-        let batch = Batch::new(&base, Arc::clone(&client))?;
-        let backups = Backups::new(&base, Arc::clone(&client))?;
-        let classification = Classification::new(&base, Arc::clone(&client))?;
-        let meta = Meta::new(&base, Arc::clone(&client))?;
-        let nodes = Nodes::new(&base, Arc::clone(&client))?;
-        let oidc = Oidc::new(&base, Arc::clone(&client))?;
-        let modules = Modules::new(&base, Arc::clone(&client))?;
-        let query = Query::new(&base, Arc::clone(&client))?;
+        let client = client_builder.build()?;
 
-        Ok(WeaviateClient {
-            base_url: base,
-            client,
-            schema,
-            objects,
-            batch,
-            backups,
-            classification,
-            meta,
-            nodes,
-            oidc,
-            modules,
-            query,
-        })
+        Ok(WeaviateClient { base_url, client })
     }
 
     /// Determine if the application is ready to receive traffic.
@@ -207,6 +173,70 @@ impl WeaviateClient {
             reqwest::StatusCode::OK => Ok(true),
             _ => Ok(false),
         }
+    }
+
+    pub fn schema(&self) -> Schema<'_> {
+        Schema::new(self)
+    }
+
+    pub fn query(&self) -> Query<'_> {
+        Query::new(self)
+    }
+
+    pub fn oidc(&self) -> Oidc<'_> {
+        Oidc::new(self)
+    }
+
+    pub fn objects(&self) -> Objects<'_> {
+        Objects::new(self)
+    }
+
+    pub fn nodes(&self) -> Nodes<'_> {
+        Nodes::new(self)
+    }
+
+    pub fn modules(&self) -> Modules<'_> {
+        Modules::new(self)
+    }
+
+    pub fn meta(&self) -> Meta<'_> {
+        Meta::new(self)
+    }
+
+    pub fn classification(&self) -> Classification<'_> {
+        Classification::new(self)
+    }
+
+    pub fn batch(&self) -> Batch<'_> {
+        Batch::new(self)
+    }
+
+    pub fn backups(&self) -> Backups<'_> {
+        Backups::new(self)
+    }
+
+    pub(crate) fn get(&self, url: impl IntoUrl) -> reqwest::RequestBuilder {
+        self.client.get(url)
+    }
+
+    pub(crate) fn post(&self, url: impl IntoUrl) -> reqwest::RequestBuilder {
+        self.client.post(url)
+    }
+
+    pub(crate) fn put(&self, url: impl IntoUrl) -> reqwest::RequestBuilder {
+        self.client.put(url)
+    }
+
+    pub(crate) fn delete(&self, url: impl IntoUrl) -> reqwest::RequestBuilder {
+        self.client.delete(url)
+    }
+
+    pub(crate) fn patch(&self, url: impl IntoUrl) -> reqwest::RequestBuilder {
+        self.client.patch(url)
+    }
+
+    pub(crate) fn head(&self, url: impl IntoUrl) -> reqwest::RequestBuilder {
+        self.client.head(url)
     }
 
     /// Builder for the WeaviateClient

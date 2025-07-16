@@ -1,25 +1,33 @@
 use reqwest::Url;
 use std::error::Error;
-use std::sync::Arc;
 
 use crate::collections::backups::{
     BackupBackends, BackupCreateRequest, BackupResponse, BackupRestoreRequest, BackupStatus,
     BackupStatusResponse,
 };
 use crate::collections::error::BackupError;
+use crate::WeaviateClient;
 
 /// All backup related endpoints and functionality described in
 /// [Weaviate meta API documentation](https://weaviate.io/developers/weaviate/api/rest/backups)
 #[derive(Debug)]
-pub struct Backups {
-    endpoint: Url,
-    client: Arc<reqwest::Client>,
+pub struct Backups<'a> {
+    client: &'a WeaviateClient,
 }
 
-impl Backups {
-    pub(super) fn new(url: &Url, client: Arc<reqwest::Client>) -> Result<Self, Box<dyn Error>> {
-        let endpoint = url.join("/v1/backups/")?;
-        Ok(Backups { endpoint, client })
+impl<'a> Backups<'a> {
+    pub(super) fn new(client: &'a WeaviateClient) -> Self {
+        Backups { client }
+    }
+
+    /// Get the endpoint for backups
+    ///
+    /// # Returns
+    /// A `Result` containing the URL for the backups endpoint or a `ParseError` if the URL is invalid.
+    ///
+    /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
+    fn endpoint(&self) -> Result<Url, url::ParseError> {
+        self.client.base_url.join("/v1/backups/")
     }
 
     /// Create a new backup
@@ -53,7 +61,7 @@ impl Backups {
         backup_request: &BackupCreateRequest,
         wait_for_completion: bool,
     ) -> Result<BackupResponse, Box<dyn Error>> {
-        let endpoint = self.endpoint.join(backend.value())?;
+        let endpoint = self.endpoint()?.join(backend.value())?;
         let payload = serde_json::to_value(backup_request)?;
         let res = self.client.post(endpoint).json(&payload).send().await?;
 
@@ -104,7 +112,7 @@ impl Backups {
         if restore {
             path.push_str("/restore");
         }
-        let endpoint = self.endpoint.join(&path)?;
+        let endpoint = self.endpoint()?.join(&path)?;
         let res = self.client.get(endpoint).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
@@ -151,7 +159,7 @@ impl Backups {
         wait_for_completion: bool,
     ) -> Result<BackupResponse, Box<dyn Error>> {
         let path = format!("{}/{}/restore", backend.value(), backup_id);
-        let endpoint = self.endpoint.join(&path)?;
+        let endpoint = self.endpoint()?.join(&path)?;
         let payload = serde_json::to_value(backup_request)?;
         let res = self.client.post(endpoint).json(&payload).send().await?;
 
@@ -275,7 +283,7 @@ mod tests {
         )
         .await;
         let res = client
-            .backups
+            .backups()
             .get_backup_status(BackupBackends::FILESYSTEM, "abcd", false)
             .await;
         mock.assert();
@@ -287,7 +295,7 @@ mod tests {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_get(&mut mock_server, "/v1/backups/filesystem/abcd", 404, "").await;
         let res = client
-            .backups
+            .backups()
             .get_backup_status(BackupBackends::FILESYSTEM, "abcd", false)
             .await;
         mock.assert();
@@ -302,7 +310,7 @@ mod tests {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/backups/filesystem", 200, &out_str).await;
         let res = client
-            .backups
+            .backups()
             .create(BackupBackends::FILESYSTEM, &req, false)
             .await;
         mock.assert();
@@ -316,7 +324,7 @@ mod tests {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/backups/filesystem", 404, "").await;
         let res = client
-            .backups
+            .backups()
             .create(BackupBackends::FILESYSTEM, &req, false)
             .await;
         mock.assert();
@@ -340,7 +348,7 @@ mod tests {
         )
         .await;
         let res = client
-            .backups
+            .backups()
             .create(BackupBackends::FILESYSTEM, &req, true)
             .await;
         mock.assert();
@@ -355,7 +363,7 @@ mod tests {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/backups/filesystem", 404, "").await;
         let res = client
-            .backups
+            .backups()
             .create(BackupBackends::FILESYSTEM, &req, true)
             .await;
         mock.assert();
@@ -376,7 +384,7 @@ mod tests {
         )
         .await;
         let res = client
-            .backups
+            .backups()
             .restore(BackupBackends::FILESYSTEM, "abcd", &req, false)
             .await;
         mock.assert();
@@ -396,7 +404,7 @@ mod tests {
         )
         .await;
         let res = client
-            .backups
+            .backups()
             .restore(BackupBackends::FILESYSTEM, "abcd", &req, false)
             .await;
         mock.assert();
@@ -426,7 +434,7 @@ mod tests {
         )
         .await;
         let res = client
-            .backups
+            .backups()
             .restore(BackupBackends::FILESYSTEM, "abcd", &req, true)
             .await;
         mock.assert();
@@ -447,7 +455,7 @@ mod tests {
         )
         .await;
         let res = client
-            .backups
+            .backups()
             .restore(BackupBackends::FILESYSTEM, "abcd", &req, true)
             .await;
         mock.assert();
