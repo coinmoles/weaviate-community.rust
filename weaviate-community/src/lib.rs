@@ -403,7 +403,7 @@ mod tests {
         let res = client.is_ready().await;
         mock.assert();
         assert!(res.is_ok());
-        assert_eq!(false, res.unwrap());
+        assert!(!res.unwrap());
     }
 
     #[tokio::test]
@@ -422,6 +422,6 @@ mod tests {
         let res = client.is_live().await;
         mock.assert();
         assert!(res.is_ok());
-        assert_eq!(false, res.unwrap());
+        assert!(!res.unwrap());
     }
 }
