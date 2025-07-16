@@ -1,12 +1,11 @@
-use reqwest::Url;
-use std::error::Error;
+use reqwest::{StatusCode, Url};
 
+use crate::error::WeaviateError;
 use crate::models::backups::{
     BackupBackends, BackupCreateRequest, BackupResponse, BackupRestoreRequest, BackupStatus,
     BackupStatusResponse,
 };
-use crate::models::error::BackupError;
-use crate::WeaviateClient;
+use crate::{ResponseExt, WeaviateClient};
 
 /// All backup related endpoints and functionality described in
 /// [Weaviate meta API documentation](https://weaviate.io/developers/weaviate/api/rest/backups)
@@ -60,27 +59,26 @@ impl<'a> Backups<'a> {
         backend: BackupBackends,
         backup_request: &BackupCreateRequest,
         wait_for_completion: bool,
-    ) -> Result<BackupResponse, Box<dyn Error>> {
+    ) -> Result<BackupResponse, WeaviateError> {
         let endpoint = self.endpoint()?.join(backend.value())?;
         let payload = serde_json::to_value(backup_request)?;
-        let res = self.client.post(endpoint).json(&payload).send().await?;
+        let mut res: BackupResponse = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
 
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let mut res: BackupResponse = res.json().await?;
-                if wait_for_completion {
-                    let complete = self
-                        .wait_for_completion(backend, &backup_request.id, false)
-                        .await?;
-                    res.status = complete;
-                }
-                Ok(res)
-            }
-            _ => Err(Box::new(BackupError(format!(
-                "status code {} received.",
-                res.status()
-            )))),
+        if wait_for_completion {
+            let complete = self
+                .wait_for_completion(backend, &backup_request.id, false)
+                .await?;
+            res.status = complete;
         }
+        Ok(res)
     }
 
     /// Get the status of a backup
@@ -107,23 +105,21 @@ impl<'a> Backups<'a> {
         backend: BackupBackends,
         backup_id: &str,
         restore: bool,
-    ) -> Result<BackupStatusResponse, Box<dyn Error>> {
+    ) -> Result<BackupStatusResponse, WeaviateError> {
         let mut path: String = format!("{}/{}", backend.value(), backup_id);
         if restore {
             path.push_str("/restore");
         }
         let endpoint = self.endpoint()?.join(&path)?;
-        let res = self.client.get(endpoint).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: BackupStatusResponse = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(Box::new(BackupError(format!(
-                "status code {} received.",
-                res.status()
-            )))),
-        }
+        let res: BackupStatusResponse = self
+            .client
+            .get(endpoint)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Restore a backup
@@ -157,26 +153,24 @@ impl<'a> Backups<'a> {
         backup_id: &str,
         backup_request: &BackupRestoreRequest,
         wait_for_completion: bool,
-    ) -> Result<BackupResponse, Box<dyn Error>> {
+    ) -> Result<BackupResponse, WeaviateError> {
         let path = format!("{}/{}/restore", backend.value(), backup_id);
         let endpoint = self.endpoint()?.join(&path)?;
         let payload = serde_json::to_value(backup_request)?;
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let mut res: BackupResponse = res.json().await?;
-                if wait_for_completion {
-                    let complete = self.wait_for_completion(backend, backup_id, true).await?;
-                    res.status = complete;
-                }
-                Ok(res)
-            }
-            _ => Err(Box::new(BackupError(format!(
-                "status code {} received.",
-                res.status()
-            )))),
+        let mut res: BackupResponse = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        if wait_for_completion {
+            let complete = self.wait_for_completion(backend, backup_id, true).await?;
+            res.status = complete;
         }
+        Ok(res)
     }
 
     /// Wait for a backup to complete before returning
@@ -185,14 +179,13 @@ impl<'a> Backups<'a> {
         backend: BackupBackends,
         backup_id: &str,
         restore: bool,
-    ) -> Result<BackupStatus, Box<dyn Error>> {
+    ) -> Result<BackupStatus, WeaviateError> {
         loop {
-            let res = self.get_backup_status(backend, backup_id, restore).await;
-            let status = res?;
-            if status.status == BackupStatus::SUCCESS {
+            let res = self.get_backup_status(backend, backup_id, restore).await?;
+            if res.status == BackupStatus::SUCCESS {
                 return Ok(BackupStatus::SUCCESS);
-            } else if status.status == BackupStatus::FAILED {
-                return Err(Box::new(BackupError("backup status FAILED".into())));
+            } else if res.status == BackupStatus::FAILED {
+                return Err(WeaviateError::BackupFailed);
             }
         }
     }

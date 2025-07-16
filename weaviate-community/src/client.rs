@@ -1,12 +1,11 @@
-use std::error::Error;
-
 use reqwest::header::{HeaderMap, AUTHORIZATION};
 use reqwest::{IntoUrl, Url};
 
-use crate::models::auth::{ApiKey, AuthApiKey};
 use crate::endpoints::{
     Backups, Batch, Classification, Meta, Modules, Nodes, Objects, Oidc, Query, Schema,
 };
+use crate::error::WeaviateError;
+use crate::models::auth::{ApiKey, AuthApiKey};
 
 /// An asynchronous `WeaviateClient` to interact with a Weaviate database.
 #[derive(Debug, Clone)]
@@ -27,7 +26,7 @@ impl WeaviateClient {
     /// ```
     /// use std::collections::HashMap;
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::auth::{AuthApiKey, ApiKey};
+    /// use weaviate_community::models::auth::{AuthApiKey, ApiKey};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -59,10 +58,10 @@ impl WeaviateClient {
         url: &str,
         auth_client_secret: Option<AuthApiKey>,
         api_keys: Option<Vec<ApiKey>>,
-    ) -> Result<Self, Box<dyn Error>> {
+    ) -> Result<Self, WeaviateError> {
         let base_url = Url::parse(url)?;
         if base_url.cannot_be_a_base() {
-            return Err(format!("The provided URL '{url}' cannot be used as a base URL.").into());
+            return Err(url::ParseError::RelativeUrlWithCannotBeABaseBase.into());
         }
 
         let mut client_builder = reqwest::Client::builder();
@@ -120,7 +119,7 @@ impl WeaviateClient {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn is_live(&self) -> Result<bool, Box<dyn Error>> {
+    pub async fn is_live(&self) -> Result<bool, WeaviateError> {
         let endpoint = self.base_url.join("/v1/.well-known/live")?;
         let resp = self.client.get(endpoint).send().await?;
         match resp.status() {
@@ -148,7 +147,7 @@ impl WeaviateClient {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn is_ready(&self) -> Result<bool, Box<dyn Error>> {
+    pub async fn is_ready(&self) -> Result<bool, WeaviateError> {
         let endpoint = self.base_url.join("/v1/.well-known/ready")?;
         let resp = self.client.get(endpoint).send().await?;
         match resp.status() {
@@ -333,7 +332,7 @@ impl WeaviateClientBuilder {
     ///
     /// let client = WeaviateClientBuilder::new("http://localhost:8080").build();
     /// ```
-    pub fn build(self) -> Result<WeaviateClient, Box<dyn Error>> {
+    pub fn build(self) -> Result<WeaviateClient, WeaviateError> {
         let client = WeaviateClient::new(&self.base_url, self.auth_secret, Some(self.api_keys))?;
         Ok(client)
     }

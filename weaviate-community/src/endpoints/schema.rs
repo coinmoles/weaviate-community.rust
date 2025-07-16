@@ -1,11 +1,11 @@
+use hyper::StatusCode;
 use reqwest::Url;
 
-use crate::models::error::SchemaError;
+use crate::error::WeaviateError;
 use crate::models::schema::{
     Class, Classes, Property, Shard, ShardStatus, Shards, Tenant, Tenants,
 };
-use crate::WeaviateClient;
-use std::error::Error;
+use crate::{ResponseExt, WeaviateClient};
 
 /// All schema related endpoints and functionality described in
 /// [Weaviate schema API documentation](https://weaviate.io/developers/weaviate/api/rest/schema)
@@ -45,17 +45,17 @@ impl<'a> Schema<'a> {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn get_class(&self, class_name: &str) -> Result<Class, Box<dyn Error>> {
+    pub async fn get_class(&self, class_name: &str) -> Result<Class, WeaviateError> {
         let endpoint = self.endpoint()?.join(class_name)?;
-        let res = self.client.get(endpoint).send().await?;
-
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: Class = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(self.get_err_msg("get class", res).await),
-        }
+        let res: Class = self
+            .client
+            .get(endpoint)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Facilitates the retrieval of the full Weaviate schema.
@@ -72,16 +72,17 @@ impl<'a> Schema<'a> {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn get(&self) -> Result<Classes, Box<dyn Error>> {
+    pub async fn get(&self) -> Result<Classes, WeaviateError> {
         let endpoint = self.endpoint()?;
-        let res = self.client.get(endpoint).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: Classes = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(self.get_err_msg("get schema", res).await),
-        }
+        let res: Classes = self
+            .client
+            .get(endpoint)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Create a new data object class in the schema.
@@ -93,7 +94,7 @@ impl<'a> Schema<'a> {
     /// POST /v1/schema
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::schema::Class;
+    /// use weaviate_community::models::schema::Class;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -104,17 +105,19 @@ impl<'a> Schema<'a> {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn create_class(&self, class: &Class) -> Result<Class, Box<dyn Error>> {
+    pub async fn create_class(&self, class: &Class) -> Result<Class, WeaviateError> {
         let endpoint = self.endpoint()?;
         let payload = serde_json::to_value(class).unwrap();
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: Class = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(self.get_err_msg("create class", res).await),
-        }
+        let res: Class = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     ///
@@ -133,13 +136,15 @@ impl<'a> Schema<'a> {
     /// }
     /// ```
     ///
-    pub async fn delete(&self, class_name: &str) -> Result<bool, Box<dyn Error>> {
+    pub async fn delete(&self, class_name: &str) -> Result<bool, WeaviateError> {
         let endpoint = self.endpoint()?.join(class_name)?;
-        let res = self.client.delete(endpoint).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => Ok(true),
-            _ => Err(self.get_err_msg("delete class", res).await),
-        }
+        let _res = self
+            .client
+            .delete(endpoint)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?;
+        Ok(true)
     }
 
     /// Update settings of an existing schema class.
@@ -155,17 +160,19 @@ impl<'a> Schema<'a> {
     /// some fields may be immutable.
     ///
     /// You should attach a body to this PUT request with the entire new configuration of the class
-    pub async fn update(&self, class: &Class) -> Result<Class, Box<dyn Error>> {
+    pub async fn update(&self, class: &Class) -> Result<Class, WeaviateError> {
         let endpoint = self.endpoint()?.join(&class.class)?;
         let payload = serde_json::to_value(class)?;
-        let res = self.client.put(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: Class = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(self.get_err_msg("update class", res).await),
-        }
+        let res: Class = self
+            .client
+            .put(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     ///
@@ -175,36 +182,38 @@ impl<'a> Schema<'a> {
         &self,
         class_name: &str,
         property: &Property,
-    ) -> Result<Property, Box<dyn Error>> {
+    ) -> Result<Property, WeaviateError> {
         let mut endpoint = class_name.to_string();
         endpoint.push_str("/properties");
         let endpoint = self.endpoint()?.join(&endpoint)?;
         let payload = serde_json::to_value(property)?;
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: Property = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(self.get_err_msg("add property", res).await),
-        }
+        let res: Property = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     ///
     /// View all of the shards for a particular class.
     ///
-    pub async fn get_shards(&self, class_name: &str) -> Result<Shards, Box<dyn Error>> {
+    pub async fn get_shards(&self, class_name: &str) -> Result<Shards, WeaviateError> {
         let path = format!("{class_name}/shards");
         let endpoint = self.endpoint()?.join(&path)?;
-        let res = self.client.get(endpoint).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let shards = res.json::<Vec<Shard>>().await?;
-                let shards = Shards { shards };
-                Ok(shards)
-            }
-            _ => Err(self.get_err_msg("get shards", res).await),
-        }
+        let res: Vec<Shard> = self
+            .client
+            .get(endpoint)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(Shards { shards: res })
     }
 
     ///
@@ -215,35 +224,38 @@ impl<'a> Schema<'a> {
         class_name: &str,
         shard_name: &str,
         status: ShardStatus,
-    ) -> Result<Shard, Box<dyn Error>> {
+    ) -> Result<Shard, WeaviateError> {
         let path = format!("{class_name}/shards/{shard_name}");
         let endpoint = self.endpoint()?.join(&path)?;
         let payload = serde_json::json!({ "status": status });
-        let res = self.client.put(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => Ok(Shard {
-                name: shard_name.into(),
-                status,
-            }),
-            _ => Err(self.get_err_msg("update class shard", res).await),
-        }
+        let _res = self
+            .client
+            .put(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?;
+        Ok(Shard {
+            name: shard_name.into(),
+            status,
+        })
     }
 
     ///
     /// List tenants
     ///
-    pub async fn list_tenants(&self, class_name: &str) -> Result<Tenants, Box<dyn Error>> {
+    pub async fn list_tenants(&self, class_name: &str) -> Result<Tenants, WeaviateError> {
         let path = format!("{class_name}/tenants");
         let endpoint = self.endpoint()?.join(&path)?;
-        let res = self.client.get(endpoint).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let tenants = res.json::<Vec<Tenant>>().await?;
-                let tenants = Tenants { tenants };
-                Ok(tenants)
-            }
-            _ => Err(self.get_err_msg("list tenants", res).await),
-        }
+        let res: Vec<Tenant> = self
+            .client
+            .get(endpoint)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(Tenants { tenants: res })
     }
 
     ///
@@ -253,19 +265,20 @@ impl<'a> Schema<'a> {
         &self,
         class_name: &str,
         tenants: &Tenants,
-    ) -> Result<Tenants, Box<dyn Error>> {
+    ) -> Result<Tenants, WeaviateError> {
         let path = format!("{class_name}/tenants");
         let endpoint = self.endpoint()?.join(&path)?;
         let payload = serde_json::to_value(&tenants.tenants)?;
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let tenants = res.json::<Vec<Tenant>>().await?;
-                let tenants = Tenants { tenants };
-                Ok(tenants)
-            }
-            _ => Err(self.get_err_msg("add tenants", res).await),
-        }
+        let res: Vec<Tenant> = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(Tenants { tenants: res })
     }
 
     ///
@@ -275,15 +288,18 @@ impl<'a> Schema<'a> {
         &self,
         class_name: &str,
         tenants: &Vec<&str>,
-    ) -> Result<bool, Box<dyn Error>> {
+    ) -> Result<bool, WeaviateError> {
         let path = format!("{class_name}/tenants");
         let endpoint = self.endpoint()?.join(&path)?;
         let payload = serde_json::to_value(tenants)?;
-        let res = self.client.delete(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => Ok(true),
-            _ => Err(self.get_err_msg("remove tenants", res).await),
-        }
+        let _res = self
+            .client
+            .delete(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?;
+        Ok(true)
     }
 
     ///
@@ -297,37 +313,20 @@ impl<'a> Schema<'a> {
         &self,
         class_name: &str,
         tenants: &Tenants,
-    ) -> Result<Tenants, Box<dyn Error>> {
+    ) -> Result<Tenants, WeaviateError> {
         let path = format!("{class_name}/tenants");
         let endpoint = self.endpoint()?.join(&path)?;
         let payload = serde_json::to_value(&tenants.tenants)?;
-        let res = self.client.put(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let tenants = res.json::<Vec<Tenant>>().await?;
-                let tenants = Tenants { tenants };
-                Ok(tenants)
-            }
-            _ => Err(self.get_err_msg("update tenants", res).await),
-        }
-    }
-
-    /// Get the error message for the endpoint
-    ///
-    /// Made to reduce the boilerplate error message building
-    async fn get_err_msg(&self, endpoint: &str, res: reqwest::Response) -> Box<SchemaError> {
-        let status_code = res.status();
-        let msg: Result<serde_json::Value, reqwest::Error> = res.json().await;
-        let r_str: String;
-        if let Ok(json) = msg {
-            r_str = format!(
-                "Status code `{status_code}` received when calling {endpoint} endpoint. Response: {json}"
-            );
-        } else {
-            r_str =
-                format!("Status code `{status_code}` received when calling {endpoint} endpoint.",);
-        }
-        Box::new(SchemaError(r_str))
+        let res: Vec<Tenant> = self
+            .client
+            .put(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(Tenants { tenants: res })
     }
 }
 

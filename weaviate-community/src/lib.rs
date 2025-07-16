@@ -6,4 +6,9 @@ mod client;
 mod endpoints;
 pub use client::{WeaviateClient, WeaviateClientBuilder};
 
+pub mod error;
+
 pub mod models;
+
+mod helper;
+pub(crate) use helper::*;

@@ -1,15 +1,15 @@
+use hyper::StatusCode;
 use reqwest::Url;
-use std::error::Error;
 
 use crate::{
+    error::WeaviateError,
     models::{
         batch::{
             BatchAddObjects, BatchAddReferencesResponse, BatchDeleteRequest, BatchDeleteResponse,
         },
-        error::BatchError,
         objects::{ConsistencyLevel, MultiObjects, References},
     },
-    WeaviateClient,
+    ResponseExt, WeaviateClient,
 };
 
 /// All batch related endpoints and functionality described in
@@ -80,7 +80,7 @@ impl<'a> Batch<'a> {
         objects: MultiObjects,
         consistency_level: Option<ConsistencyLevel>,
         tenant: Option<&str>,
-    ) -> Result<BatchAddObjects, Box<dyn Error>> {
+    ) -> Result<BatchAddObjects, WeaviateError> {
         let mut endpoint = self.endpoint()?.join("objects")?;
         if let Some(x) = consistency_level {
             endpoint
@@ -93,17 +93,16 @@ impl<'a> Batch<'a> {
         }
 
         let payload = serde_json::to_value(&objects)?;
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: BatchAddObjects = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(Box::new(BatchError(format!(
-                "status code {} received.",
-                res.status()
-            )))),
-        }
+        let res: BatchAddObjects = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Batch delete objects.
@@ -147,7 +146,7 @@ impl<'a> Batch<'a> {
         request_body: BatchDeleteRequest,
         consistency_level: Option<ConsistencyLevel>,
         tenant: Option<&str>,
-    ) -> Result<BatchDeleteResponse, Box<dyn Error>> {
+    ) -> Result<BatchDeleteResponse, WeaviateError> {
         let mut endpoint = self.endpoint()?.join("objects")?;
         if let Some(x) = consistency_level {
             endpoint
@@ -160,17 +159,16 @@ impl<'a> Batch<'a> {
         }
 
         let payload = serde_json::to_value(&request_body)?;
-        let res = self.client.delete(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: BatchDeleteResponse = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(Box::new(BatchError(format!(
-                "status code {} received.",
-                res.status()
-            )))),
-        }
+        let res: BatchDeleteResponse = self
+            .client
+            .delete(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Batch add references.
@@ -227,7 +225,7 @@ impl<'a> Batch<'a> {
         references: References,
         consistency_level: Option<ConsistencyLevel>,
         tenant: Option<&str>,
-    ) -> Result<BatchAddReferencesResponse, Box<dyn Error>> {
+    ) -> Result<BatchAddReferencesResponse, WeaviateError> {
         let mut converted: Vec<serde_json::Value> = Vec::new();
         for reference in references.0 {
             let new_ref = serde_json::json!({
@@ -258,17 +256,16 @@ impl<'a> Batch<'a> {
             endpoint.query_pairs_mut().append_pair("tenant", t);
         }
 
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: BatchAddReferencesResponse = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(Box::new(BatchError(format!(
-                "status code {} received.",
-                res.status()
-            )))),
-        }
+        let res: BatchAddReferencesResponse = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 }
 

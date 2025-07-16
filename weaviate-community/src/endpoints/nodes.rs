@@ -1,8 +1,9 @@
-use crate::models::error::NodesError;
-use crate::models::nodes::MultiNodes;
-use crate::WeaviateClient;
+use hyper::StatusCode;
 use reqwest::Url;
-use std::error::Error;
+
+use crate::error::WeaviateError;
+use crate::models::nodes::MultiNodes;
+use crate::{ResponseExt, WeaviateClient};
 
 /// All nodes related endpoints and functionality described in
 /// [Weaviate nodes API documentation](https://weaviate.io/developers/weaviate/api/rest/nodes)
@@ -40,19 +41,17 @@ impl<'a> Nodes<'a> {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn get_nodes_status(&self) -> Result<MultiNodes, Box<dyn Error>> {
+    pub async fn get_nodes_status(&self) -> Result<MultiNodes, WeaviateError> {
         let endpoint = self.endpoint()?;
-        let res = self.client.get(endpoint).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: MultiNodes = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(Box::new(NodesError(format!(
-                "status code {} received when calling get_nodes_status endpoint.",
-                res.status()
-            )))),
-        }
+        let res = self
+            .client
+            .get(endpoint)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 }
 

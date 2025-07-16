@@ -1,12 +1,11 @@
-use crate::{
-    models::{
-        error::GraphQLError,
-        query::{AggregateQuery, ExploreQuery, GetQuery, RawQuery},
-    },
-    WeaviateClient,
-};
+use hyper::StatusCode;
 use reqwest::Url;
-use std::error::Error;
+
+use crate::{
+    error::WeaviateError,
+    models::query::{AggregateQuery, ExploreQuery, GetQuery, RawQuery},
+    ResponseExt, WeaviateClient,
+};
 
 /// All GraphQL related endpoints and functionality described in
 /// [Weaviate GraphQL API documentation](https://weaviate.io/developers/weaviate/api/graphql)
@@ -40,7 +39,7 @@ impl<'a> Query<'a> {
     /// # Example
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::query::GetBuilder;
+    /// use weaviate_community::models::query::GetBuilder;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -61,20 +60,19 @@ impl<'a> Query<'a> {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn get(&self, query: GetQuery) -> Result<serde_json::Value, Box<dyn Error>> {
+    pub async fn get(&self, query: GetQuery) -> Result<serde_json::Value, WeaviateError> {
         let endpoint = self.endpoint()?;
         let payload = serde_json::to_value(query)?;
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res = res.json::<serde_json::Value>().await?;
-                Ok(res)
-            }
-            _ => Err(Box::new(GraphQLError(format!(
-                "status code {} received when executing GraphQL Get.",
-                res.status()
-            )))),
-        }
+        let res: serde_json::Value = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Execute the Aggregate{} GraphQL query
@@ -86,7 +84,7 @@ impl<'a> Query<'a> {
     /// # Example
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::query::AggregateBuilder;
+    /// use weaviate_community::models::query::AggregateBuilder;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -102,20 +100,19 @@ impl<'a> Query<'a> {
     pub async fn aggregate(
         &self,
         query: AggregateQuery,
-    ) -> Result<serde_json::Value, Box<dyn Error>> {
+    ) -> Result<serde_json::Value, WeaviateError> {
         let endpoint = self.endpoint()?;
         let payload = serde_json::to_value(query).unwrap();
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res = res.json::<serde_json::Value>().await?;
-                Ok(res)
-            }
-            _ => Err(Box::new(GraphQLError(format!(
-                "status code {} received when executing GraphQL Aggregate.",
-                res.status()
-            )))),
-        }
+        let res: serde_json::Value = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Execute the Explore{} GraphQL query
@@ -126,7 +123,7 @@ impl<'a> Query<'a> {
     /// # Example
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::query::ExploreBuilder;
+    /// use weaviate_community::models::query::ExploreBuilder;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -140,20 +137,19 @@ impl<'a> Query<'a> {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn explore(&self, query: ExploreQuery) -> Result<serde_json::Value, Box<dyn Error>> {
+    pub async fn explore(&self, query: ExploreQuery) -> Result<serde_json::Value, WeaviateError> {
         let endpoint = self.endpoint()?;
         let payload = serde_json::to_value(query).unwrap();
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res = res.json::<serde_json::Value>().await?;
-                Ok(res)
-            }
-            _ => Err(Box::new(GraphQLError(format!(
-                "status code {} received when executing GraphQL Explore.",
-                res.status()
-            )))),
-        }
+        let res = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Execute a raw GraphQL query.
@@ -170,7 +166,7 @@ impl<'a> Query<'a> {
     /// # Example
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::collections::query::RawQuery;
+    /// use weaviate_community::models::query::RawQuery;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -181,20 +177,19 @@ impl<'a> Query<'a> {
     ///
     /// }
     /// ```
-    pub async fn raw(&self, query: RawQuery) -> Result<serde_json::Value, Box<dyn Error>> {
+    pub async fn raw(&self, query: RawQuery) -> Result<serde_json::Value, WeaviateError> {
         let endpoint = self.endpoint()?;
         let payload = serde_json::to_value(query).unwrap();
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res = res.json::<serde_json::Value>().await?;
-                Ok(res)
-            }
-            _ => Err(Box::new(GraphQLError(format!(
-                "status code {} received when executing GraphQL raw query.",
-                res.status()
-            )))),
-        }
+        let res: serde_json::Value = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 }
 

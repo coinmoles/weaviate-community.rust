@@ -1,6 +1,6 @@
 use reqwest::Url;
-use std::error::Error;
 
+use crate::error::WeaviateError;
 use crate::models::meta::Metadata;
 use crate::WeaviateClient;
 
@@ -50,7 +50,7 @@ impl<'a> Meta<'a> {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn get_meta(&self) -> Result<Metadata, Box<dyn Error>> {
+    pub async fn get_meta(&self) -> Result<Metadata, WeaviateError> {
         let endpoint = self.endpoint()?;
         let res = self.client.get(endpoint).send().await?;
         let res: Metadata = res.json().await?;

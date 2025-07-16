@@ -1,13 +1,11 @@
-use std::error::Error;
+use hyper::StatusCode;
 use url::Url;
 use uuid::Uuid;
 
 use crate::{
-    models::{
-        classification::{ClassificationRequest, ClassificationResponse},
-        error::ClassificationError,
-    },
-    WeaviateClient,
+    error::WeaviateError,
+    models::classification::{ClassificationRequest, ClassificationResponse},
+    ResponseExt, WeaviateClient,
 };
 
 /// All classification related endpoints and functionality described in
@@ -72,16 +70,18 @@ impl<'a> Classification<'a> {
     pub async fn schedule(
         &self,
         request: ClassificationRequest,
-    ) -> Result<ClassificationResponse, Box<dyn Error>> {
+    ) -> Result<ClassificationResponse, WeaviateError> {
         let endpoint = self.endpoint()?;
-        let res = self.client.post(endpoint).json(&request).send().await?;
-        match res.status() {
-            reqwest::StatusCode::CREATED => {
-                let res: ClassificationResponse = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(self.get_err_msg("schedule classification", res).await),
-        }
+        let res: ClassificationResponse = self
+            .client
+            .post(endpoint)
+            .json(&request)
+            .send()
+            .await?
+            .check_status(StatusCode::CREATED)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Get the status of a classification
@@ -100,36 +100,17 @@ impl<'a> Classification<'a> {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn get(&self, id: Uuid) -> Result<ClassificationResponse, Box<dyn Error>> {
+    pub async fn get(&self, id: Uuid) -> Result<ClassificationResponse, WeaviateError> {
         let endpoint = self.endpoint()?.join(&id.to_string())?;
-        let res = self.client.get(endpoint).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: ClassificationResponse = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(self.get_err_msg("get classification", res).await),
-        }
-    }
-
-    /// Get the error message for the endpoint
-    ///
-    /// Made to reduce the boilerplate error message building
-    async fn get_err_msg(
-        &self,
-        endpoint: &str,
-        res: reqwest::Response,
-    ) -> Box<ClassificationError> {
-        let status_code = res.status();
-        let r_str = match res.json::<serde_json::Value>().await {
-            Ok(json) => format!(
-                "Status code `{status_code}` received when calling {endpoint} endpoint. Response: {json}"
-            ),
-            Err(_) => format!(
-                "Status code `{status_code}` received when calling {endpoint} endpoint.",
-            )
-        };
-        Box::new(ClassificationError(r_str))
+        let res = self
+            .client
+            .get(endpoint)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 }
 

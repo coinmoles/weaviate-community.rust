@@ -1,11 +1,12 @@
-use crate::models::error::QueryError;
+use hyper::StatusCode;
+use reqwest::Url;
+use uuid::Uuid;
+
+use crate::error::{QueryError, WeaviateError};
 use crate::models::objects::{
     ConsistencyLevel, MultiObjects, Object, ObjectListParameters, Reference,
 };
-use crate::WeaviateClient;
-use reqwest::Url;
-use std::error::Error;
-use uuid::Uuid;
+use crate::{ResponseExt, WeaviateClient};
 
 /// All objects endpoints and functionality described in
 /// [Weaviate objects API documentation](https://weaviate.io/developers/weaviate/api/rest/objects)
@@ -55,7 +56,7 @@ impl<'a> Objects<'a> {
     pub async fn list(
         &self,
         parameters: ObjectListParameters,
-    ) -> Result<MultiObjects, Box<dyn Error>> {
+    ) -> Result<MultiObjects, WeaviateError> {
         let mut endpoint = self.endpoint()?;
 
         // Add the query params when they are present
@@ -73,28 +74,20 @@ impl<'a> Objects<'a> {
                 .append_pair("offset", &o.to_string());
             // Raise an err if after is some
             if parameters.after.is_some() {
-                return Err(Box::new(QueryError(
-                    "'after' must be None when 'offset' is Some".into(),
-                )));
+                return Err(QueryError::InvalidCombination(&["after", "offset"]).into());
             }
         }
         if let Some(a) = &parameters.after {
             endpoint.query_pairs_mut().append_pair("after", a);
             if parameters.after.is_none() {
-                return Err(Box::new(QueryError(
-                    "'class' must be Some when 'after' is Some".into(),
-                )));
+                return Err(QueryError::InvalidCombination(&["class", "after"]).into());
             }
             // raise an error if offset or sort are some
             if parameters.offset.is_some() {
-                return Err(Box::new(QueryError(
-                    "'offset' must be None when 'after' is Some".into(),
-                )));
+                return Err(QueryError::InvalidCombination(&["offset", "after"]).into());
             }
             if parameters.sort.is_some() {
-                return Err(Box::new(QueryError(
-                    "'sort' must be None when 'after' is Some".into(),
-                )));
+                return Err(QueryError::InvalidCombination(&["sort", "after"]).into());
             }
         }
         if let Some(i) = parameters.include {
@@ -109,14 +102,15 @@ impl<'a> Objects<'a> {
             endpoint.query_pairs_mut().append_pair("order", &values);
         }
 
-        let res = self.client.get(endpoint).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: MultiObjects = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(self.get_err_msg("list objects", res).await),
-        }
+        let res: MultiObjects = self
+            .client
+            .get(endpoint)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Create a new data object. The provided meta-data and schema values are validated.
@@ -151,7 +145,7 @@ impl<'a> Objects<'a> {
         &self,
         new_object: &Object,
         consistency_level: Option<ConsistencyLevel>,
-    ) -> Result<Object, Box<dyn Error>> {
+    ) -> Result<Object, WeaviateError> {
         let mut endpoint = self.endpoint()?;
         if let Some(x) = consistency_level {
             endpoint
@@ -160,14 +154,16 @@ impl<'a> Objects<'a> {
         }
         let payload = serde_json::to_value(new_object)?;
 
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: Object = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(self.get_err_msg("create object", res).await),
-        }
+        let res: Object = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Collect an individual data object given it's UUID.
@@ -201,7 +197,7 @@ impl<'a> Objects<'a> {
         include: Option<&str>,
         consistency_level: Option<ConsistencyLevel>,
         tenant_key: Option<&str>,
-    ) -> Result<Object, Box<dyn Error>> {
+    ) -> Result<Object, WeaviateError> {
         let path = format!("{class_name}/{id}");
         let mut endpoint = self.endpoint()?.join(&path)?;
         if let Some(cl) = consistency_level {
@@ -218,14 +214,15 @@ impl<'a> Objects<'a> {
             endpoint.query_pairs_mut().append_pair("include", i);
         }
 
-        let res = self.client.get(endpoint).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: Object = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(self.get_err_msg("get object", res).await),
-        }
+        let res: Object = self
+            .client
+            .get(endpoint)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Check if a data object exists without returning the object itself.
@@ -259,7 +256,7 @@ impl<'a> Objects<'a> {
         id: &Uuid,
         consistency_level: Option<ConsistencyLevel>,
         tenant_name: Option<&str>,
-    ) -> Result<bool, Box<dyn Error>> {
+    ) -> Result<bool, WeaviateError> {
         let path = format!("{class_name}/{id}");
         let mut endpoint = self.endpoint()?.join(&path)?;
         if let Some(cl) = consistency_level {
@@ -272,11 +269,13 @@ impl<'a> Objects<'a> {
             endpoint.query_pairs_mut().append_pair("tenant", t);
         }
 
-        let res = self.client.head(endpoint).send().await?;
-        match res.status() {
-            reqwest::StatusCode::NO_CONTENT => Ok(true),
-            _ => Err(self.get_err_msg("object exists", res).await),
-        }
+        let _res = self
+            .client
+            .head(endpoint)
+            .send()
+            .await?
+            .check_status(StatusCode::NO_CONTENT)?;
+        Ok(true)
     }
 
     /// Updates the given property values of the data object.
@@ -316,7 +315,7 @@ impl<'a> Objects<'a> {
         class_name: &str,
         id: &Uuid,
         consistency_level: Option<ConsistencyLevel>,
-    ) -> Result<bool, Box<dyn Error>> {
+    ) -> Result<bool, WeaviateError> {
         let path = format!("{class_name}/{id}");
         let mut endpoint = self.endpoint()?.join(&path)?;
         if let Some(cl) = consistency_level {
@@ -324,11 +323,14 @@ impl<'a> Objects<'a> {
                 .query_pairs_mut()
                 .append_pair("consistency_level", cl.value());
         }
-        let res = self.client.patch(endpoint).json(&properties).send().await?;
-        match res.status() {
-            reqwest::StatusCode::NO_CONTENT => Ok(true),
-            _ => Err(self.get_err_msg("update object properties", res).await),
-        }
+        let _res = self
+            .client
+            .patch(endpoint)
+            .json(&properties)
+            .send()
+            .await?
+            .check_status(StatusCode::NO_CONTENT)?;
+        Ok(true)
     }
 
     /// Replaces all property values of the data object.
@@ -370,7 +372,7 @@ impl<'a> Objects<'a> {
         class_name: &str,
         id: &Uuid,
         consistency_level: Option<ConsistencyLevel>,
-    ) -> Result<Object, Box<dyn Error>> {
+    ) -> Result<Object, WeaviateError> {
         let path = format!("{class_name}/{id}");
         let mut endpoint = self.endpoint()?.join(&path)?;
         if let Some(cl) = consistency_level {
@@ -384,14 +386,16 @@ impl<'a> Objects<'a> {
             "properties": properties
         });
 
-        let res = self.client.put(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: Object = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(self.get_err_msg("replace object properties", res).await),
-        }
+        let res: Object = self
+            .client
+            .put(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Delete an individual data object from Weaviate.
@@ -424,7 +428,7 @@ impl<'a> Objects<'a> {
         id: &Uuid,
         consistency_level: Option<ConsistencyLevel>,
         tenant_name: Option<&str>,
-    ) -> Result<bool, Box<dyn Error>> {
+    ) -> Result<bool, WeaviateError> {
         let path = format!("{class_name}/{id}");
         let mut endpoint = self.endpoint()?.join(&path)?;
         if let Some(cl) = consistency_level {
@@ -437,11 +441,13 @@ impl<'a> Objects<'a> {
             endpoint.query_pairs_mut().append_pair("tenant", t);
         }
 
-        let res = self.client.delete(endpoint).send().await?;
-        match res.status() {
-            reqwest::StatusCode::NO_CONTENT => Ok(true),
-            _ => Err(self.get_err_msg("delete object", res).await),
-        }
+        let _res = self
+            .client
+            .delete(endpoint)
+            .send()
+            .await?
+            .check_status(StatusCode::NO_CONTENT)?;
+        Ok(true)
     }
 
     /// Validate an object's schema and metadata without creating it.
@@ -472,7 +478,7 @@ impl<'a> Objects<'a> {
         class_name: &str,
         properties: &serde_json::Value,
         id: &Uuid,
-    ) -> Result<bool, Box<dyn Error>> {
+    ) -> Result<bool, WeaviateError> {
         let endpoint = self.endpoint()?.join("validate")?;
         let payload = serde_json::json!({
             "class": class_name,
@@ -480,11 +486,14 @@ impl<'a> Objects<'a> {
             "properties": properties
         });
 
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => Ok(true),
-            _ => Err(self.get_err_msg("validate object", res).await),
-        }
+        let _res = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?;
+        Ok(true)
     }
 
     /// Add a reference to the array of cross-references of the given property in the source object
@@ -526,7 +535,7 @@ impl<'a> Objects<'a> {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn reference_add(&self, reference: Reference) -> Result<bool, Box<dyn Error>> {
+    pub async fn reference_add(&self, reference: Reference) -> Result<bool, WeaviateError> {
         let path = format!(
             "{}/{}/references/{}",
             reference.from_class_name, reference.from_uuid, reference.from_property_name
@@ -545,11 +554,14 @@ impl<'a> Objects<'a> {
             "beacon": format!("weaviate://localhost/{}/{}", reference.to_class_name, reference.to_uuid),
         });
 
-        let res = self.client.post(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => Ok(true),
-            _ => Err(self.get_err_msg("add object reference", res).await),
-        }
+        let _res = self
+            .client
+            .post(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?;
+        Ok(true)
     }
 
     /// Update all references in a specified property of an object specified by its class name and
@@ -600,11 +612,11 @@ impl<'a> Objects<'a> {
         to_uuids: Vec<&Uuid>,
         consistency_level: Option<ConsistencyLevel>,
         tenant_name: Option<&str>,
-    ) -> Result<Object, Box<dyn Error>> {
+    ) -> Result<Object, WeaviateError> {
         if to_class_names.len() != to_uuids.len() {
-            return Err(Box::new(QueryError(
-                "to_class_names.len() must equal to_uuids.len().".into(),
-            )));
+            return Err(
+                QueryError::InconsistentLength(to_class_names.len(), to_uuids.len()).into(),
+            );
         }
 
         let path = format!("{from_class_name}/{from_uuid}/references/{from_property_name}");
@@ -628,14 +640,16 @@ impl<'a> Objects<'a> {
         }
         let payload = serde_json::json!(beacons);
 
-        let res = self.client.put(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::OK => {
-                let res: Object = res.json().await?;
-                Ok(res)
-            }
-            _ => Err(self.get_err_msg("update object reference", res).await),
-        }
+        let res: Object = self
+            .client
+            .put(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::OK)?
+            .json()
+            .await?;
+        Ok(res)
     }
 
     /// Delete the single reference that is given in the body from the list of references that the
@@ -676,7 +690,7 @@ impl<'a> Objects<'a> {
     ///     Ok(())
     /// }
     /// ```
-    pub async fn reference_delete(&self, reference: Reference) -> Result<bool, Box<dyn Error>> {
+    pub async fn reference_delete(&self, reference: Reference) -> Result<bool, WeaviateError> {
         let path = format!(
             "{}/{}/references/{}",
             reference.from_class_name, reference.from_uuid, reference.from_property_name
@@ -696,25 +710,14 @@ impl<'a> Objects<'a> {
             "beacon": format!("weaviate://localhost/{}/{}", reference.to_class_name, reference.to_uuid),
         });
 
-        let res = self.client.delete(endpoint).json(&payload).send().await?;
-        match res.status() {
-            reqwest::StatusCode::NO_CONTENT => Ok(true),
-            _ => Err(self.get_err_msg("delete object reference", res).await),
-        }
-    }
-
-    /// Get the error message for the endpoint
-    ///
-    /// Made to reduce the boilerplate error message building
-    async fn get_err_msg(&self, endpoint: &str, res: reqwest::Response) -> Box<QueryError> {
-        let status_code = res.status();
-        let r_str = match res.json::<serde_json::Value>().await {
-            Ok(json) => format!(
-                "Status code `{status_code}` received when calling {endpoint} endpoint. Response: {json}"
-            ),
-            Err(_) => format!("Status code `{status_code}` received when calling {endpoint} endpoint.")
-        };
-        Box::new(QueryError(r_str))
+        let _res = self
+            .client
+            .delete(endpoint)
+            .json(&payload)
+            .send()
+            .await?
+            .check_status(StatusCode::NO_CONTENT)?;
+        Ok(true)
     }
 }
 
