@@ -100,13 +100,11 @@ impl Backups {
         backup_id: &str,
         restore: bool,
     ) -> Result<BackupStatusResponse, Box<dyn Error>> {
-        let mut endpoint: String = backend.value().into();
-        endpoint.push_str("/");
-        endpoint.push_str(&backup_id.to_string());
+        let mut path: String = format!("{}/{}", backend.value(), backup_id);
         if restore {
-            endpoint.push_str("/restore");
+            path.push_str("/restore");
         }
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let endpoint = self.endpoint.join(&path)?;
         let res = self.client.get(endpoint).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
@@ -152,11 +150,8 @@ impl Backups {
         backup_request: &BackupRestoreRequest,
         wait_for_completion: bool,
     ) -> Result<BackupResponse, Box<dyn Error>> {
-        let mut endpoint: String = backend.value().into();
-        endpoint.push_str("/");
-        endpoint.push_str(&backup_id.to_string());
-        endpoint.push_str("/restore");
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{}/{}/restore", backend.value(), backup_id);
+        let endpoint = self.endpoint.join(&path)?;
         let payload = serde_json::to_value(&backup_request)?;
         let res = self.client.post(endpoint).json(&payload).send().await?;
 
@@ -189,7 +184,7 @@ impl Backups {
             if status.status == BackupStatus::SUCCESS {
                 return Ok(BackupStatus::SUCCESS);
             } else if status.status == BackupStatus::FAILED {
-                return Err(Box::new(BackupError(format!("backup status FAILED",))));
+                return Err(Box::new(BackupError("backup status FAILED".into())));
             }
         }
     }
@@ -277,7 +272,8 @@ mod tests {
             "/v1/backups/filesystem/abcd",
             200,
             &out_str,
-        ).await;
+        )
+        .await;
         let res = client
             .backups
             .get_backup_status(&BackupBackends::FILESYSTEM, "abcd", false)
@@ -341,7 +337,8 @@ mod tests {
             "/v1/backups/filesystem/abcd",
             200,
             &out_two_str,
-        ).await;
+        )
+        .await;
         let res = client
             .backups
             .create(&BackupBackends::FILESYSTEM, &req, true)
@@ -376,7 +373,8 @@ mod tests {
             "/v1/backups/filesystem/abcd/restore",
             200,
             &out_str,
-        ).await;
+        )
+        .await;
         let res = client
             .backups
             .restore(&BackupBackends::FILESYSTEM, "abcd", &req, false)
@@ -395,7 +393,8 @@ mod tests {
             "/v1/backups/filesystem/abcd/restore",
             404,
             "",
-        ).await;
+        )
+        .await;
         let res = client
             .backups
             .restore(&BackupBackends::FILESYSTEM, "abcd", &req, false)
@@ -417,13 +416,15 @@ mod tests {
             "/v1/backups/filesystem/abcd/restore",
             200,
             &out_str,
-        ).await;
+        )
+        .await;
         let mock2 = mock_get(
             &mut mock_server,
             "/v1/backups/filesystem/abcd/restore",
             200,
             &out_two_str,
-        ).await;
+        )
+        .await;
         let res = client
             .backups
             .restore(&BackupBackends::FILESYSTEM, "abcd", &req, true)
@@ -443,7 +444,8 @@ mod tests {
             "/v1/backups/filesystem/abcd/restore",
             404,
             "",
-        ).await;
+        )
+        .await;
         let res = client
             .backups
             .restore(&BackupBackends::FILESYSTEM, "abcd", &req, true)

@@ -16,10 +16,8 @@ impl AuthApiKey {
 
     /// Retrieve the `reqwest::header::HeaderValue` for an Authorization header.
     pub fn get_header_value(&self) -> HeaderValue {
-        let mut bearer = String::from("Bearer ");
-        bearer.push_str(&self.api_key);
-        let header_val = HeaderValue::from_str(&bearer).unwrap();
-        return header_val;
+        let bearer = format!("Bearer {}", self.api_key);
+        HeaderValue::from_str(&bearer).unwrap()
     }
 }
 
@@ -41,13 +39,11 @@ impl ApiKey {
 
     /// Retrieve the `reqwest::header::HeaderValue` for an Authorization header.
     pub fn get_header_name(&self) -> HeaderName {
-        let header_name = HeaderName::from_bytes(self.api_header.as_bytes()).unwrap();
-        return header_name;
+        HeaderName::from_bytes(self.api_header.as_bytes()).unwrap()
     }
 
     /// Retrieve the `reqwest::header::HeaderValue` for an Authorization header.
     pub fn get_header_value(&self) -> HeaderValue {
-        let header_val = HeaderValue::from_str(&self.api_key).unwrap();
-        return header_val;
+        HeaderValue::from_str(&self.api_key).unwrap()
     }
 }

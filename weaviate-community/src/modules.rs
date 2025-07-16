@@ -39,7 +39,7 @@ impl Modules {
     /// ```
     pub async fn contextionary_get_concept(
         &self,
-        concept: &str
+        concept: &str,
     ) -> Result<ContextionaryConcept, Box<dyn Error>> {
         let mut endpoint = String::from("text2vec-contextionary/concepts/");
         endpoint.push_str(concept);
@@ -50,8 +50,10 @@ impl Modules {
             reqwest::StatusCode::OK => {
                 let res: ContextionaryConcept = res.json().await?;
                 Ok(res)
-            },
-            _ => Err(self.get_err_msg("text2vec-contextionary concepts", res).await),
+            }
+            _ => Err(self
+                .get_err_msg("text2vec-contextionary concepts", res)
+                .await),
         }
     }
 
@@ -76,7 +78,7 @@ impl Modules {
     /// ```
     pub async fn contextionary_extend(
         &self,
-        concept: ContextionaryExtension
+        concept: ContextionaryExtension,
     ) -> Result<ContextionaryExtension, Box<dyn Error>> {
         let endpoint = self.endpoint.join("text2vec-contextionary/extensions")?;
         let res = self
@@ -89,7 +91,7 @@ impl Modules {
             reqwest::StatusCode::OK => {
                 let res: ContextionaryExtension = res.json().await?;
                 Ok(res)
-            },
+            }
             _ => Err(self.get_err_msg("text2vec-contextionary extend", res).await),
         }
     }
@@ -103,22 +105,14 @@ impl Modules {
         res: reqwest::Response
     ) -> Box<ModuleError> {
         let status_code = res.status();
-        let msg: Result<serde_json::Value, reqwest::Error> = res.json().await;
-        let r_str: String;
-        if let Ok(json) = msg {
-            r_str = format!(
-                "Status code `{}` received when calling {} endpoint. Response: {}",
-                status_code,
-                endpoint,
-                json,
-            );
-        } else {
-            r_str = format!(
-                "Status code `{}` received when calling {} endpoint.",
-                status_code,
-                endpoint
-            );
-        }
+        let r_str = match res.json::<serde_json::Value>().await {
+            Ok(json) => format!(
+                "Status code `{status_code}` received when calling {endpoint} endpoint. Response: {json}"
+            ),
+            Err(_) => format!(
+                "Status code `{status_code}` received when calling {endpoint} endpoint."
+            )
+        };
         Box::new(ModuleError(r_str))
     }
 }
@@ -126,11 +120,8 @@ impl Modules {
 #[cfg(test)]
 mod tests {
     use crate::{
+        collections::modules::{ContextionaryConcept, ContextionaryExtension, IndividualWords},
         WeaviateClient,
-        collections::modules::{
-            ContextionaryExtension,
-            ContextionaryConcept, IndividualWords
-        }
     };
 
     async fn get_test_harness() -> (mockito::ServerGuard, WeaviateClient) {
@@ -142,16 +133,15 @@ mod tests {
     }
 
     fn get_mock_concept_response() -> String {
-        serde_json::to_string(&ContextionaryConcept { 
-            individual_words: vec![
-                IndividualWords {
-                    info: None,
-                    word: "test".into(),
-                    present: None,
-                    concatenated_word: None,
-                }
-            ]
-        }).unwrap()
+        serde_json::to_string(&ContextionaryConcept {
+            individual_words: vec![IndividualWords {
+                info: None,
+                word: "test".into(),
+                present: None,
+                concatenated_word: None,
+            }],
+        })
+        .unwrap()
     }
 
     async fn mock_post(
@@ -190,7 +180,8 @@ mod tests {
             "/v1/modules/text2vec-contextionary/concepts/test",
             200,
             &get_mock_concept_response(),
-        ).await;
+        )
+        .await;
         let res = client.modules.contextionary_get_concept("test").await;
         mock.assert();
         assert!(res.is_ok());
@@ -204,7 +195,8 @@ mod tests {
             "/v1/modules/text2vec-contextionary/concepts/test",
             401,
             "",
-        ).await;
+        )
+        .await;
         let res = client.modules.contextionary_get_concept("test").await;
         mock.assert();
         assert!(res.is_err());
@@ -220,7 +212,8 @@ mod tests {
             "/v1/modules/text2vec-contextionary/extensions",
             200,
             &ext_str,
-        ).await;
+        )
+        .await;
         let res = client.modules.contextionary_extend(ext).await;
         mock.assert();
         assert!(res.is_ok());
@@ -234,10 +227,12 @@ mod tests {
             "/v1/modules/text2vec-contextionary/extensions",
             401,
             "",
-        ).await;
-        let res = client.modules.contextionary_extend(
-            ContextionaryExtension::new("test", "test", 1.0)
-        ).await;
+        )
+        .await;
+        let res = client
+            .modules
+            .contextionary_extend(ContextionaryExtension::new("test", "test", 1.0))
+            .await;
         mock.assert();
         assert!(res.is_err());
     }

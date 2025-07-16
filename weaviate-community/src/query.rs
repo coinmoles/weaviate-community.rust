@@ -233,7 +233,7 @@ mod tests {
     }
 
     async fn test_get_response() -> String {
-        let data = serde_json::to_string(&serde_json::json!({
+        serde_json::to_string(&serde_json::json!({
             "data": {
                 "Get": {
                     "JeopardyQuestion": [
@@ -245,12 +245,11 @@ mod tests {
                     ]
                 }
             }
-        })).unwrap();
-        data
+        })).unwrap()
     }
 
     fn test_aggregate_response() -> String {
-        let data = serde_json::to_string(&serde_json::json!(
+        serde_json::to_string(&serde_json::json!(
         {
           "data": {
             "Aggregate": {
@@ -280,12 +279,11 @@ mod tests {
             }
           }
         }))
-        .unwrap();
-        data
+        .unwrap()
     }
 
     async fn test_explore_response() -> String {
-        let data = serde_json::to_string(&serde_json::json!(
+        serde_json::to_string(&serde_json::json!(
         {
           "data": {
             "Explore": [
@@ -298,8 +296,7 @@ mod tests {
           },
           "errors": null
         }))
-        .unwrap();
-        data
+        .unwrap()
     }
 
     #[tokio::test]

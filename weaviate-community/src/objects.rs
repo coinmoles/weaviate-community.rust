@@ -134,7 +134,7 @@ impl Objects {
     ///     let res = client.objects.create(
     ///         &new,
     ///         None
-    ///     );
+    ///     ).await;
     ///     Ok(())
     /// }
     /// ```
@@ -157,7 +157,7 @@ impl Objects {
                 let res: Object = res.json().await?;
                 Ok(res)
             }
-            _ => Err(self.get_err_msg("create object", res).await)
+            _ => Err(self.get_err_msg("create object", res).await),
         }
     }
 
@@ -193,10 +193,8 @@ impl Objects {
         consistency_level: Option<ConsistencyLevel>,
         tenant_key: Option<&str>,
     ) -> Result<Object, Box<dyn Error>> {
-        let mut endpoint: String = class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&id.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/{id}");
+        let mut endpoint = self.endpoint.join(&path)?;
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
@@ -253,10 +251,8 @@ impl Objects {
         consistency_level: Option<ConsistencyLevel>,
         tenant_name: Option<&str>,
     ) -> Result<bool, Box<dyn Error>> {
-        let mut endpoint: String = class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&id.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/{id}");
+        let mut endpoint = self.endpoint.join(&path)?;
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
@@ -312,10 +308,8 @@ impl Objects {
         id: &Uuid,
         consistency_level: Option<ConsistencyLevel>,
     ) -> Result<bool, Box<dyn Error>> {
-        let mut endpoint: String = class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&id.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/{id}");
+        let mut endpoint = self.endpoint.join(&path)?;
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
@@ -368,20 +362,18 @@ impl Objects {
         id: &Uuid,
         consistency_level: Option<ConsistencyLevel>,
     ) -> Result<Object, Box<dyn Error>> {
-        let payload = serde_json::json!({
-            "class": class_name,
-            "id": id,
-            "properties": properties
-        });
-        let mut endpoint: String = class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&id.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/{id}");
+        let mut endpoint = self.endpoint.join(&path)?;
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
                 .append_pair("consistency_level", &cl.value());
         }
+        let payload = serde_json::json!({
+            "class": class_name,
+            "id": id,
+            "properties": properties
+        });
 
         let res = self.client.put(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -424,10 +416,8 @@ impl Objects {
         consistency_level: Option<ConsistencyLevel>,
         tenant_name: Option<&str>,
     ) -> Result<bool, Box<dyn Error>> {
-        let mut endpoint: String = class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&id.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/{id}");
+        let mut endpoint = self.endpoint.join(&path)?;
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
@@ -528,15 +518,11 @@ impl Objects {
     /// }
     /// ```
     pub async fn reference_add(&self, reference: Reference) -> Result<bool, Box<dyn Error>> {
-        let payload = serde_json::json!({
-            "beacon": format!("weaviate://localhost/{}/{}", reference.to_class_name, reference.to_uuid),
-        });
-        let mut endpoint: String = reference.from_class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&reference.from_uuid.to_string());
-        endpoint.push_str("/references/");
-        endpoint.push_str(&reference.from_property_name.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!(
+            "{}/{}/references/{}",
+            reference.from_class_name, reference.from_uuid, reference.from_property_name
+        );
+        let mut endpoint = self.endpoint.join(&path)?;
         if let Some(cl) = reference.consistency_level {
             endpoint
                 .query_pairs_mut()
@@ -546,6 +532,9 @@ impl Objects {
             // multi tenancy must be enabled first
             endpoint.query_pairs_mut().append_pair("tenant", &t);
         }
+        let payload = serde_json::json!({
+            "beacon": format!("weaviate://localhost/{}/{}", reference.to_class_name, reference.to_uuid),
+        });
 
         let res = self.client.post(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -608,21 +597,8 @@ impl Objects {
             )));
         }
 
-        // Match the class names to the id's in the beacon format
-        let mut beacons = Vec::new();
-        for (class_name, id) in to_class_names.iter().zip(to_uuids.iter()) {
-            beacons.push(serde_json::json!({
-                "beacon": format!("weaviate://localhost/{}/{}", class_name, id)
-            }));
-        }
-        let payload = serde_json::json!(beacons);
-
-        let mut endpoint: String = from_class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&from_uuid.to_string());
-        endpoint.push_str("/references/");
-        endpoint.push_str(&from_property_name.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{from_class_name}/{from_uuid}/references/{from_property_name}");
+        let mut endpoint = self.endpoint.join(&path)?;
         if let Some(cl) = consistency_level {
             endpoint
                 .query_pairs_mut()
@@ -632,6 +608,15 @@ impl Objects {
             // multi tenancy must be enabled first
             endpoint.query_pairs_mut().append_pair("tenant", t);
         }
+
+        // Match the class names to the id's in the beacon format
+        let mut beacons = Vec::new();
+        for (class_name, id) in to_class_names.iter().zip(to_uuids.iter()) {
+            beacons.push(serde_json::json!({
+                "beacon": format!("weaviate://localhost/{}/{}", class_name, id)
+            }));
+        }
+        let payload = serde_json::json!(beacons);
 
         let res = self.client.put(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -682,15 +667,11 @@ impl Objects {
     /// }
     /// ```
     pub async fn reference_delete(&self, reference: Reference) -> Result<bool, Box<dyn Error>> {
-        let payload = serde_json::json!({
-            "beacon": format!("weaviate://localhost/{}/{}", reference.to_class_name, reference.to_uuid),
-        });
-        let mut endpoint: String = reference.from_class_name.into();
-        endpoint.push_str("/");
-        endpoint.push_str(&reference.from_uuid.to_string());
-        endpoint.push_str("/references/");
-        endpoint.push_str(&reference.from_property_name.to_string());
-        let mut endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!(
+            "{}/{}/references/{}",
+            reference.from_class_name, reference.from_uuid, reference.from_property_name
+        );
+        let mut endpoint = self.endpoint.join(&path)?;
         if let Some(cl) = reference.consistency_level {
             endpoint
                 .query_pairs_mut()
@@ -700,6 +681,10 @@ impl Objects {
             // multi tenancy must be enabled first
             endpoint.query_pairs_mut().append_pair("tenant", &t);
         }
+
+        let payload = serde_json::json!({
+            "beacon": format!("weaviate://localhost/{}/{}", reference.to_class_name, reference.to_uuid),
+        });
 
         let res = self.client.delete(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -713,22 +698,12 @@ impl Objects {
     /// Made to reduce the boilerplate error message building
     async fn get_err_msg(&self, endpoint: &str, res: reqwest::Response) -> Box<QueryError> {
         let status_code = res.status();
-        let msg: Result<serde_json::Value, reqwest::Error> = res.json().await;
-        let r_str: String;
-        if let Ok(json) = msg {
-            r_str = format!(
-                "Status code `{}` received when calling {} endpoint. Response: {}",
-                status_code,
-                endpoint,
-                json,
-            );
-        } else {
-            r_str = format!(
-                "Status code `{}` received when calling {} endpoint.",
-                status_code,
-                endpoint
-            );
-        }
+        let r_str = match res.json::<serde_json::Value>().await {
+            Ok(json) => format!(
+                "Status code `{status_code}` received when calling {endpoint} endpoint. Response: {json}"
+            ),
+            Err(_) => format!("Status code `{status_code}` received when calling {endpoint} endpoint.")
+        };
         Box::new(QueryError(r_str))
     }
 }

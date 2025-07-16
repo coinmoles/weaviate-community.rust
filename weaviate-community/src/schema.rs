@@ -188,9 +188,8 @@ impl Schema {
     /// View all of the shards for a particular class.
     ///
     pub async fn get_shards(&self, class_name: &str) -> Result<Shards, Box<dyn Error>> {
-        let mut endpoint = class_name.to_string();
-        endpoint.push_str("/shards");
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/shards");
+        let endpoint = self.endpoint.join(&path)?;
         let res = self.client.get(endpoint).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
@@ -211,10 +210,8 @@ impl Schema {
         shard_name: &str,
         status: ShardStatus,
     ) -> Result<Shard, Box<dyn Error>> {
-        let mut endpoint = class_name.to_string();
-        endpoint.push_str("/shards/");
-        endpoint.push_str(shard_name);
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/shards/{shard_name}");
+        let endpoint = self.endpoint.join(&path)?;
         let payload = serde_json::json!({ "status": status });
         let res = self.client.put(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -230,9 +227,8 @@ impl Schema {
     /// List tenants
     ///
     pub async fn list_tenants(&self, class_name: &str) -> Result<Tenants, Box<dyn Error>> {
-        let mut endpoint = class_name.to_string();
-        endpoint.push_str("/tenants");
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/tenants");
+        let endpoint = self.endpoint.join(&path)?;
         let res = self.client.get(endpoint).send().await?;
         match res.status() {
             reqwest::StatusCode::OK => {
@@ -252,9 +248,8 @@ impl Schema {
         class_name: &str,
         tenants: &Tenants,
     ) -> Result<Tenants, Box<dyn Error>> {
-        let mut endpoint = class_name.to_string();
-        endpoint.push_str("/tenants");
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/tenants");
+        let endpoint = self.endpoint.join(&path)?;
         let payload = serde_json::to_value(&tenants.tenants)?;
         let res = self.client.post(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -275,9 +270,8 @@ impl Schema {
         class_name: &str,
         tenants: &Vec<&str>,
     ) -> Result<bool, Box<dyn Error>> {
-        let mut endpoint = class_name.to_string();
-        endpoint.push_str("/tenants");
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/tenants");
+        let endpoint = self.endpoint.join(&path)?;
         let payload = serde_json::to_value(&tenants)?;
         let res = self.client.delete(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -298,9 +292,8 @@ impl Schema {
         class_name: &str,
         tenants: &Tenants,
     ) -> Result<Tenants, Box<dyn Error>> {
-        let mut endpoint = class_name.to_string();
-        endpoint.push_str("/tenants");
-        let endpoint = self.endpoint.join(&endpoint)?;
+        let path = format!("{class_name}/tenants");
+        let endpoint = self.endpoint.join(&path)?;
         let payload = serde_json::to_value(&tenants.tenants)?;
         let res = self.client.put(endpoint).json(&payload).send().await?;
         match res.status() {
@@ -322,17 +315,11 @@ impl Schema {
         let r_str: String;
         if let Ok(json) = msg {
             r_str = format!(
-                "Status code `{}` received when calling {} endpoint. Response: {}",
-                status_code,
-                endpoint,
-                json,
+                "Status code `{status_code}` received when calling {endpoint} endpoint. Response: {json}"
             );
         } else {
-            r_str = format!(
-                "Status code `{}` received when calling {} endpoint.",
-                status_code,
-                endpoint
-            );
+            r_str =
+                format!("Status code `{status_code}` received when calling {endpoint} endpoint.",);
         }
         Box::new(SchemaError(r_str))
     }
@@ -563,7 +550,8 @@ mod tests {
             "/v1/schema/TestClass/properties",
             200,
             &property_str,
-        ).await;
+        )
+        .await;
         let res = client.schema.add_property("TestClass", &property).await;
         mock.assert();
         assert!(res.is_ok());
@@ -643,7 +631,8 @@ mod tests {
             "/v1/schema/Test/tenants",
             200,
             &tenants_str,
-        ).await;
+        )
+        .await;
         let res = client.schema.list_tenants("Test").await;
         mock.assert();
         assert!(res.is_ok());
@@ -669,7 +658,8 @@ mod tests {
             "/v1/schema/Test/tenants",
             200,
             &tenants_str,
-        ).await;
+        )
+        .await;
         let res = client.schema.add_tenants("Test", &tenants).await;
         mock.assert();
         assert!(res.is_ok());
@@ -721,7 +711,8 @@ mod tests {
             "/v1/schema/Test/tenants",
             200,
             &tenants_str,
-        ).await;
+        )
+        .await;
         let res = client.schema.update_tenants("Test", &tenants).await;
         mock.assert();
         assert!(res.is_ok());

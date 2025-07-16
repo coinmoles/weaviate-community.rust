@@ -211,7 +211,7 @@ impl ObjectBuilder {
             creation_time_unix: self.creation_time_unix,
             last_update_time_unix: self.last_update_time_unix,
             vector_weights: self.vector_weights,
-            additional: None
+            additional: None,
         }
     }
 }
@@ -423,6 +423,7 @@ impl ObjectListParametersBuilder {
     /// - classification
     /// - vector
     /// - featureProjection
+    ///
     /// and other module specific additional properties.
     ///
     /// # Parameters
@@ -523,7 +524,7 @@ impl References {
     ///     "JeopardyCategory",
     ///     &uuid2,
     /// );
-
+    ///
     /// let references = References::new(
     ///    vec![reference]
     /// );

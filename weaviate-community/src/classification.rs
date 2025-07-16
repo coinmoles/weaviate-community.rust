@@ -74,7 +74,7 @@ impl Classification {
                 let res: ClassificationResponse = res.json().await?;
                 Ok(res)
             }
-            _ => Err(self.get_err_msg("schedule classification", res).await)
+            _ => Err(self.get_err_msg("schedule classification", res).await),
         }
     }
 
@@ -102,7 +102,7 @@ impl Classification {
                 let res: ClassificationResponse = res.json().await?;
                 Ok(res)
             }
-            _ => Err(self.get_err_msg("get classification", res).await)
+            _ => Err(self.get_err_msg("get classification", res).await),
         }
     }
 
@@ -112,36 +112,28 @@ impl Classification {
     async fn get_err_msg(
         &self,
         endpoint: &str,
-        res: reqwest::Response
+        res: reqwest::Response,
     ) -> Box<ClassificationError> {
         let status_code = res.status();
-        let msg: Result<serde_json::Value, reqwest::Error> = res.json().await;
-        let r_str: String;
-        if let Ok(json) = msg {
-            r_str = format!(
-                "Status code `{}` received when calling {} endpoint. Response: {}",
-                status_code,
-                endpoint,
-                json,
-            );
-        } else {
-            r_str = format!(
-                "Status code `{}` received when calling {} endpoint.",
-                status_code,
-                endpoint
-            );
-        }
+        let r_str = match res.json::<serde_json::Value>().await {
+            Ok(json) => format!(
+                "Status code `{status_code}` received when calling {endpoint} endpoint. Response: {json}"
+            ),
+            Err(_) => format!(
+                "Status code `{status_code}` received when calling {endpoint} endpoint.",
+            )
+        };
         Box::new(ClassificationError(r_str))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use uuid::Uuid;
     use crate::{
+        collections::classification::{ClassificationRequest, ClassificationType},
         WeaviateClient,
-        collections::classification::{ClassificationRequest, ClassificationType}
     };
+    use uuid::Uuid;
 
     async fn get_test_harness() -> (mockito::ServerGuard, WeaviateClient) {
         let mock_server = mockito::Server::new_async().await;
