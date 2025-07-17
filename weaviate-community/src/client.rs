@@ -237,7 +237,7 @@ impl WeaviateClient {
     ///     .with_api_key("your-key")
     ///     .build();
     /// ```
-    pub fn builder(base_url: &str) -> WeaviateClientBuilder {
+    pub fn builder(base_url: impl Into<String>) -> WeaviateClientBuilder {
         WeaviateClientBuilder::new(base_url)
     }
 }
