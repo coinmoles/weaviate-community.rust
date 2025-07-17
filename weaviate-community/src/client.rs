@@ -26,11 +26,11 @@ impl WeaviateClient {
     /// ```
     /// use std::collections::HashMap;
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::models::auth::{AuthApiKey, ApiKey};
+    /// use weaviate_community::models::auth::{AuthSecret, ApiKey};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let auth = AuthApiKey::new("test-key");
+    ///     let auth = AuthSecret::api_key("test-key");
     ///     let client = WeaviateClient::new(
     ///         "http://localhost:8080",
     ///         Some(auth),
@@ -48,8 +48,8 @@ impl WeaviateClient {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080")
-    ///         .with_auth_secret("test-key")
-    ///         .with_api_key("X-OpenAI-Api-Key", "your-key")
+    ///         .with_api_key("test-key")
+    ///         .with_external_api_key("X-OpenAI-Api-Key", "your-key")
     ///         .build();
     ///     Ok(())
     /// }
@@ -110,7 +110,7 @@ impl WeaviateClient {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080")
-    ///         .with_auth_secret("test-key")
+    ///         .with_api_key("test-key")
     ///         .build()?;
     ///     let res = client.is_live().await;
     ///     Ok(())
@@ -138,7 +138,7 @@ impl WeaviateClient {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080")
-    ///         .with_auth_secret("test-key")
+    ///         .with_api_key("test-key")
     ///         .build()?;
     ///     let res = client.is_ready().await;
     ///     Ok(())
@@ -234,7 +234,7 @@ impl WeaviateClient {
     /// use weaviate_community::WeaviateClient;
     ///
     /// let client = WeaviateClient::builder("http://localhost:8080")
-    ///     .with_auth_secret("your-key")
+    ///     .with_api_key("your-key")
     ///     .build();
     /// ```
     pub fn builder(base_url: &str) -> WeaviateClientBuilder {
@@ -270,7 +270,7 @@ impl WeaviateClientBuilder {
     /// use weaviate_community::WeaviateClientBuilder;
     ///
     /// let client = WeaviateClientBuilder::new("http://localhost:8080")
-    ///     .with_auth_secret("your-key")
+    ///     .with_api_key("your-key")
     ///     .build();
     /// ```
     pub fn new(base_url: impl Into<String>) -> WeaviateClientBuilder {
@@ -345,7 +345,7 @@ impl WeaviateClientBuilder {
     /// use weaviate_community::WeaviateClientBuilder;
     ///
     /// let client = WeaviateClientBuilder::new("http://localhost:8080")
-    ///     .with_api_key("X-OpenAI-Api-Key", "abcdefg")
+    ///     .with_external_api_key("X-OpenAI-Api-Key", "abcdefg")
     ///     .build();
     /// ```
     pub fn with_external_api_key(mut self, header: &str, api_key: &str) -> WeaviateClientBuilder {
