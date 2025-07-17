@@ -23,6 +23,7 @@ uuid = { version = "1.4.1", features = ["v4", "serde"] }
 url = "2.5.4"
 
 [dev-dependencies]
+indoc = "2.0.6"
 mockito = "1.2.0"
 
 [features]

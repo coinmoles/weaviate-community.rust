@@ -87,6 +87,7 @@ impl From<QueryError> for WeaviateError {
 pub enum QueryError {
     InvalidCombination(&'static [&'static str]),
     InconsistentLength(usize, usize),
+    MissingField(String),
 }
 
 impl std::fmt::Display for QueryError {
@@ -107,6 +108,9 @@ impl std::fmt::Display for QueryError {
                     f,
                     "`to_class_names` and `to_uuid` must have the same length. `to_class` has length {expected}, but `to_uuid` has length {actual}."
                 )
+            }
+            QueryError::MissingField(msg) => {
+                write!(f, "Missing required field: {msg}")
             }
         }
     }

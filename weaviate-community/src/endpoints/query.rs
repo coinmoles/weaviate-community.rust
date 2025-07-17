@@ -38,12 +38,12 @@ impl<'a> Query<'a> {
     /// # Example
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::models::query::GetBuilder;
+    /// use weaviate_community::models::query::GetQuery;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
-    ///     let query = GetBuilder::new(
+    ///     let query = GetQuery::new(
     ///         "JeopardyQuestion",
     ///         vec![
     ///             "question",
@@ -52,8 +52,7 @@ impl<'a> Query<'a> {
     ///             "hasCategory { ... on JeopardyCategory { title }}"
     ///         ])
     ///         .with_limit(1)
-    ///         .with_additional(vec!["id"])
-    ///         .build();
+    ///         .with_additional(vec!["id"]);
     ///     let res = client.query().get(query).await;
     ///
     ///     Ok(())
@@ -61,7 +60,7 @@ impl<'a> Query<'a> {
     /// ```
     pub async fn get(&self, query: GetQuery) -> Result<serde_json::Value, WeaviateError> {
         let endpoint = self.endpoint()?;
-        let payload = serde_json::to_value(query)?;
+        let payload = query.as_payload();
         let res: serde_json::Value = self
             .client
             .post(endpoint)
@@ -84,15 +83,14 @@ impl<'a> Query<'a> {
     /// # Example
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::models::query::AggregateBuilder;
+    /// use weaviate_community::models::query::AggregateQuery;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
-    ///     let query = AggregateBuilder::new("Article")
+    ///     let query = AggregateQuery::new("Article")
     ///         .with_meta_count()
-    ///         .with_fields(vec!["wordCount {count maximum mean median minimum mode sum type}"])
-    ///         .build();
+    ///         .with_fields(vec!["wordCount {count maximum mean median minimum mode sum type}"]);
     ///     let res = client.query().aggregate(query).await;
     ///     Ok(())
     /// }
@@ -102,7 +100,7 @@ impl<'a> Query<'a> {
         query: AggregateQuery,
     ) -> Result<serde_json::Value, WeaviateError> {
         let endpoint = self.endpoint()?;
-        let payload = serde_json::to_value(query).unwrap();
+        let payload = query.as_payload();
         let res: serde_json::Value = self
             .client
             .post(endpoint)
@@ -124,23 +122,22 @@ impl<'a> Query<'a> {
     /// # Example
     /// ```no_run
     /// use weaviate_community::WeaviateClient;
-    /// use weaviate_community::models::query::ExploreBuilder;
+    /// use weaviate_community::models::query::ExploreQuery;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080").build()?;
-    ///     let query = ExploreBuilder::new()
+    ///     let query = ExploreQuery::new()
     ///         .with_limit(1)
     ///         .with_near_vector("{vector: [-0.36840257,0.13973749,-0.28994447]}")
-    ///         .with_fields(vec!["className"])
-    ///         .build();
+    ///         .with_fields(vec!["className"]);
     ///     let res = client.query().explore(query).await;
     ///     Ok(())
     /// }
     /// ```
     pub async fn explore(&self, query: ExploreQuery) -> Result<serde_json::Value, WeaviateError> {
         let endpoint = self.endpoint()?;
-        let payload = serde_json::to_value(query).unwrap();
+        let payload = query.as_payload()?;
         let res = self
             .client
             .post(endpoint)
@@ -181,7 +178,7 @@ impl<'a> Query<'a> {
     /// ```
     pub async fn raw(&self, query: RawQuery) -> Result<serde_json::Value, WeaviateError> {
         let endpoint = self.endpoint()?;
-        let payload = serde_json::to_value(query).unwrap();
+        let payload = query.as_payload();
         let res: serde_json::Value = self
             .client
             .post(endpoint)
@@ -199,7 +196,7 @@ impl<'a> Query<'a> {
 #[cfg(test)]
 mod tests {
     use crate::models::query::RawQuery;
-    use crate::models::query::{AggregateBuilder, ExploreBuilder, GetBuilder};
+    use crate::models::query::{AggregateQuery, ExploreQuery, GetQuery};
     use crate::WeaviateClient;
 
     async fn get_test_harness() -> (mockito::ServerGuard, WeaviateClient) {
@@ -296,7 +293,7 @@ mod tests {
         let (mut mock_server, client) = get_test_harness().await;
         let exp_res = test_get_response().await;
         let mock = mock_post(&mut mock_server, "/v1/graphql/", 200, &exp_res).await;
-        let query = GetBuilder::new(
+        let query = GetQuery::new(
             "JeopardyQuestion",
             vec![
                 "question",
@@ -306,8 +303,7 @@ mod tests {
             ],
         )
         .with_limit(1)
-        .with_additional(vec!["id"])
-        .build();
+        .with_additional(vec!["id"]);
         let res = client.query().get(query).await;
         mock.assert();
         assert!(res.is_ok());
@@ -324,7 +320,7 @@ mod tests {
     async fn test_get_query_err() {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/graphql/", 422, "").await;
-        let query = GetBuilder::new(
+        let query = GetQuery::new(
             "JeopardyQuestion",
             vec![
                 "question",
@@ -334,8 +330,7 @@ mod tests {
             ],
         )
         .with_limit(1)
-        .with_additional(vec!["id"])
-        .build();
+        .with_additional(vec!["id"]);
         let res = client.query().get(query).await;
         mock.assert();
         assert!(res.is_err());
@@ -351,12 +346,11 @@ mod tests {
             &test_aggregate_response(),
         )
         .await;
-        let query = AggregateBuilder::new("Article")
+        let query = AggregateQuery::new("Article")
             .with_meta_count()
             .with_fields(vec![
                 "wordCount {count maximum mean median minimum mode sum type}",
-            ])
-            .build();
+            ]);
         let res = client.query().aggregate(query).await;
         mock.assert();
         assert!(res.is_ok());
@@ -373,7 +367,7 @@ mod tests {
     async fn test_aggregate_query_err() {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/graphql/", 422, "").await;
-        let query = AggregateBuilder::new("JeopardyQuestion").build();
+        let query = AggregateQuery::new("JeopardyQuestion");
         let res = client.query().aggregate(query).await;
         mock.assert();
         assert!(res.is_err());
@@ -384,11 +378,10 @@ mod tests {
         let (mut mock_server, client) = get_test_harness().await;
         let exp_res = test_explore_response().await;
         let mock = mock_post(&mut mock_server, "/v1/graphql/", 200, &exp_res).await;
-        let query = ExploreBuilder::new()
+        let query = ExploreQuery::new()
             .with_limit(1)
             .with_near_vector("{vector: [-0.36840257,0.13973749,-0.28994447]}")
-            .with_fields(vec!["className"])
-            .build();
+            .with_fields(vec!["className"]);
         let res = client.query().explore(query).await;
         mock.assert();
         assert!(res.is_ok());
@@ -396,11 +389,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_explore_query_err() {
-        let (mut mock_server, client) = get_test_harness().await;
-        let mock = mock_post(&mut mock_server, "/v1/graphql/", 422, "").await;
-        let query = ExploreBuilder::new().build();
+        let (_mock_server, client) = get_test_harness().await;
+        let query = ExploreQuery::new();
         let res = client.query().explore(query).await;
-        mock.assert();
         assert!(res.is_err());
     }
 
