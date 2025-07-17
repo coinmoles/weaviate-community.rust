@@ -30,7 +30,7 @@ impl WeaviateClient {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let auth = AuthSecret::api_key("test-key");
+    ///     let auth = AuthSecret::new("test-key");
     ///     let client = WeaviateClient::new(
     ///         "http://localhost:8080",
     ///         Some(auth),
@@ -48,8 +48,8 @@ impl WeaviateClient {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080")
-    ///         .with_api_key("test-key")
-    ///         .with_external_api_key("X-OpenAI-Api-Key", "your-key")
+    ///         .with_auth_secret("test-key")
+    ///         .with_api_key("X-OpenAI-Api-Key", "your-key")
     ///         .build();
     ///     Ok(())
     /// }
@@ -110,7 +110,7 @@ impl WeaviateClient {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080")
-    ///         .with_api_key("test-key")
+    ///         .with_auth_secret("test-key")
     ///         .build()?;
     ///     let res = client.is_live().await;
     ///     Ok(())
@@ -138,7 +138,7 @@ impl WeaviateClient {
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let client = WeaviateClient::builder("http://localhost:8080")
-    ///         .with_api_key("test-key")
+    ///         .with_auth_secret("test-key")
     ///         .build()?;
     ///     let res = client.is_ready().await;
     ///     Ok(())
@@ -234,7 +234,7 @@ impl WeaviateClient {
     /// use weaviate_community::WeaviateClient;
     ///
     /// let client = WeaviateClient::builder("http://localhost:8080")
-    ///     .with_api_key("your-key")
+    ///     .with_auth_secret("your-key")
     ///     .build();
     /// ```
     pub fn builder(base_url: impl Into<String>) -> WeaviateClientBuilder {
@@ -270,7 +270,7 @@ impl WeaviateClientBuilder {
     /// use weaviate_community::WeaviateClientBuilder;
     ///
     /// let client = WeaviateClientBuilder::new("http://localhost:8080")
-    ///     .with_api_key("your-key")
+    ///     .with_auth_secret("your-key")
     ///     .build();
     /// ```
     pub fn new(base_url: impl Into<String>) -> WeaviateClientBuilder {
@@ -291,46 +291,11 @@ impl WeaviateClientBuilder {
     /// use weaviate_community::{WeaviateClientBuilder, models::auth::AuthSecret};
     ///
     /// let client = WeaviateClientBuilder::new("http://localhost:8080")
-    ///     .with_auth_secret(AuthSecret::api_key("your-api-key"))
+    ///     .with_auth_secret("your-api-key")
     ///     .build();
     /// ```
-    pub fn with_auth_secret(mut self, auth_secret: AuthSecret) -> WeaviateClientBuilder {
-        self.auth_secret = Some(auth_secret);
-        self
-    }
-
-    /// Sets the authentication token to be used by the client.
-    ///
-    /// # Parameters
-    /// - token: the AuthApiKey to set in the client
-    ///
-    /// # Example
-    /// ```
-    /// use weaviate_community::WeaviateClientBuilder;
-    ///
-    /// let client = WeaviateClientBuilder::new("http://localhost:8080")
-    ///     .with_bearer_token("your-token")
-    ///     .build();
-    /// ```
-    pub fn with_bearer_token(mut self, token: impl Into<String>) -> WeaviateClientBuilder {
-        self.auth_secret = Some(AuthSecret::bearer_token(token));
-        self
-    }
-
-    /// Sets a new api key to be used by the client.
-    ///
-    /// # Parameters
-    /// - api_key: the api key to set in the client
-    ///
-    /// # Example
-    /// ```
-    /// use weaviate_community::WeaviateClientBuilder;
-    /// let client = WeaviateClientBuilder::new("http://localhost:8080")
-    ///     .with_api_key("your-api-key")
-    ///     .build();
-    /// ```
-    pub fn with_api_key(mut self, api_key: impl Into<String>) -> WeaviateClientBuilder {
-        self.auth_secret = Some(AuthSecret::api_key(api_key));
+    pub fn with_auth_secret(mut self, api_key: impl Into<String>) -> WeaviateClientBuilder {
+        self.auth_secret = Some(AuthSecret::new(api_key));
         self
     }
 
@@ -345,10 +310,10 @@ impl WeaviateClientBuilder {
     /// use weaviate_community::WeaviateClientBuilder;
     ///
     /// let client = WeaviateClientBuilder::new("http://localhost:8080")
-    ///     .with_external_api_key("X-OpenAI-Api-Key", "abcdefg")
+    ///     .with_api_key("X-OpenAI-Api-Key", "abcdefg")
     ///     .build();
     /// ```
-    pub fn with_external_api_key(mut self, header: &str, api_key: &str) -> WeaviateClientBuilder {
+    pub fn with_api_key(mut self, header: &str, api_key: &str) -> WeaviateClientBuilder {
         self.api_keys.push(ApiKey {
             api_header: header.into(),
             api_key: api_key.into(),
