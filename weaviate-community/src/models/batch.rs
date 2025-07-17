@@ -304,7 +304,7 @@ pub struct ErrorMessage {
 ///
 /// You shouldn't need to create this yourself.
 #[derive(Serialize, Deserialize, Debug)]
-pub struct BatchAddObjects(Vec<BatchAddObject>);
+pub struct BatchAddObjects(pub Vec<BatchAddObject>);
 
 /// This is basically the same as the models::objects variant of an Object,
 /// however there is an extra field which Weaviate polls with a ResultStatus.
