@@ -5,7 +5,7 @@ use crate::endpoints::{
     Backups, Batch, Classification, Meta, Modules, Nodes, Objects, Oidc, Query, Schema,
 };
 use crate::error::WeaviateError;
-use crate::models::auth::{ApiKey, AuthApiKey};
+use crate::models::auth::{ApiKey, AuthSecret};
 
 /// An asynchronous `WeaviateClient` to interact with a Weaviate database.
 #[derive(Debug, Clone)]
@@ -56,7 +56,7 @@ impl WeaviateClient {
     /// ```
     pub fn new(
         url: &str,
-        auth_client_secret: Option<AuthApiKey>,
+        auth_client_secret: Option<AuthSecret>,
         api_keys: Option<Vec<ApiKey>>,
     ) -> Result<Self, WeaviateError> {
         let base_url = Url::parse(url)?;
@@ -70,16 +70,13 @@ impl WeaviateClient {
 
         // Add the authorization header to the client if it is present
         if let Some(auth) = auth_client_secret {
-            headers.insert(AUTHORIZATION, auth.get_header_value());
+            headers.insert(AUTHORIZATION, auth.get_header_value()?);
         };
 
         // Add any of the other header keys to the client, for example, OpenAI
         if let Some(keys) = api_keys {
-            for i in 0..keys.len() {
-                headers.insert(
-                    keys.get(i).unwrap().get_header_name(),
-                    keys.get(i).unwrap().get_header_value(),
-                );
+            for key in keys {
+                headers.insert(key.get_header_name()?, key.get_header_value()?);
             }
         }
 
@@ -249,7 +246,7 @@ impl WeaviateClient {
 #[derive(Default, Debug)]
 pub struct WeaviateClientBuilder {
     pub base_url: String,
-    pub auth_secret: Option<AuthApiKey>,
+    pub auth_secret: Option<AuthSecret>,
     pub api_keys: Vec<ApiKey>,
 }
 
@@ -276,7 +273,7 @@ impl WeaviateClientBuilder {
     ///     .with_auth_secret("your-key")
     ///     .build();
     /// ```
-    pub fn new(base_url: &str) -> WeaviateClientBuilder {
+    pub fn new(base_url: impl Into<String>) -> WeaviateClientBuilder {
         WeaviateClientBuilder {
             base_url: base_url.into(),
             auth_secret: None,
@@ -284,21 +281,56 @@ impl WeaviateClientBuilder {
         }
     }
 
+    /// Sets the authentication secret to be used by the client.
+    ///
+    /// # Parameters
+    /// - auth_secret: the AuthSecret to set in the client
+    ///
+    /// # Example
+    /// ```
+    /// use weaviate_community::{WeaviateClientBuilder, models::auth::AuthSecret};
+    ///
+    /// let client = WeaviateClientBuilder::new("http://localhost:8080")
+    ///     .with_auth_secret(AuthSecret::api_key("your-api-key"))
+    ///     .build();
+    /// ```
+    pub fn with_auth_secret(mut self, auth_secret: AuthSecret) -> WeaviateClientBuilder {
+        self.auth_secret = Some(auth_secret);
+        self
+    }
+
     /// Sets the authentication token to be used by the client.
     ///
     /// # Parameters
-    /// - auth_secret: the AuthApiKey to set in the client
+    /// - token: the AuthApiKey to set in the client
     ///
     /// # Example
     /// ```
     /// use weaviate_community::WeaviateClientBuilder;
     ///
     /// let client = WeaviateClientBuilder::new("http://localhost:8080")
-    ///     .with_auth_secret("your-key")
+    ///     .with_bearer_token("your-token")
     ///     .build();
     /// ```
-    pub fn with_auth_secret(mut self, auth_secret: &str) -> WeaviateClientBuilder {
-        self.auth_secret = Some(AuthApiKey::new(auth_secret));
+    pub fn with_bearer_token(mut self, token: impl Into<String>) -> WeaviateClientBuilder {
+        self.auth_secret = Some(AuthSecret::bearer_token(token));
+        self
+    }
+
+    /// Sets a new api key to be used by the client.
+    ///
+    /// # Parameters
+    /// - api_key: the api key to set in the client
+    ///
+    /// # Example
+    /// ```
+    /// use weaviate_community::WeaviateClientBuilder;
+    /// let client = WeaviateClientBuilder::new("http://localhost:8080")
+    ///     .with_api_key("your-api-key")
+    ///     .build();
+    /// ```
+    pub fn with_api_key(mut self, api_key: impl Into<String>) -> WeaviateClientBuilder {
+        self.auth_secret = Some(AuthSecret::api_key(api_key));
         self
     }
 
@@ -316,7 +348,7 @@ impl WeaviateClientBuilder {
     ///     .with_api_key("X-OpenAI-Api-Key", "abcdefg")
     ///     .build();
     /// ```
-    pub fn with_api_key(mut self, header: &str, api_key: &str) -> WeaviateClientBuilder {
+    pub fn with_external_api_key(mut self, header: &str, api_key: &str) -> WeaviateClientBuilder {
         self.api_keys.push(ApiKey {
             api_header: header.into(),
             api_key: api_key.into(),

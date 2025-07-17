@@ -4,6 +4,8 @@ pub enum WeaviateError {
     UrlParseError(url::ParseError),
     ReqwestError(reqwest::Error),
     SerdeJsonError(serde_json::Error),
+    InvalidHeaderName(reqwest::header::InvalidHeaderName),
+    InvalidHeaderValue(reqwest::header::InvalidHeaderValue),
     QueryError(QueryError),
     UnexpectedStatusCode {
         url: reqwest::Url,
@@ -20,6 +22,8 @@ impl std::fmt::Display for WeaviateError {
             WeaviateError::UrlParseError(e) => write!(f, "URL parse error: {e}"),
             WeaviateError::ReqwestError(e) => write!(f, "Reqwest error: {e}"),
             WeaviateError::SerdeJsonError(e) => write!(f, "Serde JSON error: {e}"),
+            WeaviateError::InvalidHeaderName(e) => write!(f, "Invalid header name: {e}"),
+            WeaviateError::InvalidHeaderValue(e) => write!(f, "Invalid header value: {e}"),
             WeaviateError::QueryError(e) => write!(f, "Query error: {e}"),
             WeaviateError::UnexpectedStatusCode {
                 url,
@@ -58,6 +62,18 @@ impl From<reqwest::Error> for WeaviateError {
 impl From<serde_json::Error> for WeaviateError {
     fn from(err: serde_json::Error) -> Self {
         WeaviateError::SerdeJsonError(err)
+    }
+}
+
+impl From<reqwest::header::InvalidHeaderName> for WeaviateError {
+    fn from(err: reqwest::header::InvalidHeaderName) -> Self {
+        WeaviateError::InvalidHeaderName(err)
+    }
+}
+
+impl From<reqwest::header::InvalidHeaderValue> for WeaviateError {
+    fn from(err: reqwest::header::InvalidHeaderValue) -> Self {
+        WeaviateError::InvalidHeaderValue(err)
     }
 }
 

@@ -2,22 +2,27 @@ use reqwest::header::{HeaderName, HeaderValue};
 
 /// The `AuthApiKey` can be used to attach a bearer token to a `WeaviateClient`.
 #[derive(Debug)]
-pub struct AuthApiKey {
-    pub api_key: String,
+pub enum AuthSecret {
+    ApiKey(String),
+    BearerToken(String),
 }
 
-impl AuthApiKey {
-    /// Construct a new `AuthApiKey`.
-    pub fn new(api_key: &str) -> Self {
-        AuthApiKey {
-            api_key: api_key.into(),
-        }
+impl AuthSecret {
+    pub fn api_key(api_key: impl Into<String>) -> Self {
+        AuthSecret::ApiKey(api_key.into())
+    }
+
+    pub fn bearer_token(token: impl Into<String>) -> Self {
+        AuthSecret::BearerToken(token.into())
     }
 
     /// Retrieve the `reqwest::header::HeaderValue` for an Authorization header.
-    pub fn get_header_value(&self) -> HeaderValue {
-        let bearer = format!("ApiKey {}", self.api_key);
-        HeaderValue::from_str(&bearer).unwrap()
+    pub fn get_header_value(&self) -> Result<HeaderValue, reqwest::header::InvalidHeaderValue> {
+        let bearer = match self {
+            AuthSecret::ApiKey(api_key) => format!("ApiKey {api_key}"),
+            AuthSecret::BearerToken(token) => format!("Bearer {token}"),
+        };
+        HeaderValue::from_str(&bearer)
     }
 }
 
@@ -30,7 +35,7 @@ pub struct ApiKey {
 
 impl ApiKey {
     /// Construct a new `AuthApiKey`.
-    pub fn new(api_header: &str, api_key: &str) -> Self {
+    pub fn new(api_header: impl Into<String>, api_key: impl Into<String>) -> Self {
         ApiKey {
             api_header: api_header.into(),
             api_key: api_key.into(),
@@ -38,12 +43,12 @@ impl ApiKey {
     }
 
     /// Retrieve the `reqwest::header::HeaderValue` for an Authorization header.
-    pub fn get_header_name(&self) -> HeaderName {
-        HeaderName::from_bytes(self.api_header.as_bytes()).unwrap()
+    pub fn get_header_name(&self) -> Result<HeaderName, reqwest::header::InvalidHeaderName> {
+        HeaderName::from_bytes(self.api_header.as_bytes())
     }
 
     /// Retrieve the `reqwest::header::HeaderValue` for an Authorization header.
-    pub fn get_header_value(&self) -> HeaderValue {
-        HeaderValue::from_str(&self.api_key).unwrap()
+    pub fn get_header_value(&self) -> Result<HeaderValue, reqwest::header::InvalidHeaderValue> {
+        HeaderValue::from_str(&self.api_key)
     }
 }
