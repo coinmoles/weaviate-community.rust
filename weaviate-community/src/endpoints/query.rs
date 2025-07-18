@@ -1,8 +1,12 @@
 use reqwest::{StatusCode, Url};
+use serde::de::DeserializeOwned;
 
 use crate::{
     error::WeaviateError,
-    models::query::{AggregateQuery, ExploreQuery, GetQuery, RawQuery},
+    models::query::{
+        AggregateQuery, ExploreQuery, GetQuery, GraphQLAggregateResponse, GraphQLExploreResponse,
+        GraphQLGetResponse, RawQuery,
+    },
     ResponseExt, WeaviateClient,
 };
 
@@ -53,15 +57,15 @@ impl<'a> Query<'a> {
     ///         ])
     ///         .with_limit(1)
     ///         .with_additional(vec!["id"]);
-    ///     let res = client.query().get(query).await;
+    ///     let res = client.query().get::<serde_json::Value>(query).await;
     ///
     ///     Ok(())
     /// }
     /// ```
-    pub async fn get(&self, query: GetQuery) -> Result<serde_json::Value, WeaviateError> {
+    pub async fn get<T: DeserializeOwned>(&self, query: GetQuery) -> Result<T, WeaviateError> {
         let endpoint = self.endpoint()?;
         let payload = query.as_payload();
-        let res: serde_json::Value = self
+        let res: GraphQLGetResponse<T> = self
             .client
             .post(endpoint)
             .json(&payload)
@@ -71,7 +75,7 @@ impl<'a> Query<'a> {
             .await?
             .json()
             .await?;
-        Ok(res)
+        Ok(res.data.get)
     }
 
     /// Execute the Aggregate{} GraphQL query
@@ -91,17 +95,17 @@ impl<'a> Query<'a> {
     ///     let query = AggregateQuery::new("Article")
     ///         .with_meta_count()
     ///         .with_fields(vec!["wordCount {count maximum mean median minimum mode sum type}"]);
-    ///     let res = client.query().aggregate(query).await;
+    ///     let res = client.query().aggregate::<serde_json::Value>(query).await;
     ///     Ok(())
     /// }
     /// ```
-    pub async fn aggregate(
+    pub async fn aggregate<T: DeserializeOwned>(
         &self,
         query: AggregateQuery,
-    ) -> Result<serde_json::Value, WeaviateError> {
+    ) -> Result<T, WeaviateError> {
         let endpoint = self.endpoint()?;
         let payload = query.as_payload();
-        let res: serde_json::Value = self
+        let res: GraphQLAggregateResponse<T> = self
             .client
             .post(endpoint)
             .json(&payload)
@@ -111,7 +115,7 @@ impl<'a> Query<'a> {
             .await?
             .json()
             .await?;
-        Ok(res)
+        Ok(res.data.aggregate)
     }
 
     /// Execute the Explore{} GraphQL query
@@ -131,14 +135,17 @@ impl<'a> Query<'a> {
     ///         .with_limit(1)
     ///         .with_near_vector("{vector: [-0.36840257,0.13973749,-0.28994447]}")
     ///         .with_fields(vec!["className"]);
-    ///     let res = client.query().explore(query).await;
+    ///     let res = client.query().explore::<serde_json::Value>(query).await;
     ///     Ok(())
     /// }
     /// ```
-    pub async fn explore(&self, query: ExploreQuery) -> Result<serde_json::Value, WeaviateError> {
+    pub async fn explore<T: DeserializeOwned>(
+        &self,
+        query: ExploreQuery,
+    ) -> Result<T, WeaviateError> {
         let endpoint = self.endpoint()?;
         let payload = query.as_payload()?;
-        let res = self
+        let res: GraphQLExploreResponse<T> = self
             .client
             .post(endpoint)
             .json(&payload)
@@ -148,7 +155,7 @@ impl<'a> Query<'a> {
             .await?
             .json()
             .await?;
-        Ok(res)
+        Ok(res.data.explore)
     }
 
     /// Execute a raw GraphQL query.
@@ -304,14 +311,11 @@ mod tests {
         )
         .with_limit(1)
         .with_additional(vec!["id"]);
-        let res = client.query().get(query).await;
+        let res = client.query().get::<serde_json::Value>(query).await;
         mock.assert();
         assert!(res.is_ok());
         assert_eq!(
-            res.unwrap()["data"]["Get"]["JeopardyQuestion"]
-                .as_array()
-                .unwrap()
-                .len(),
+            res.unwrap()["JeopardyQuestion"].as_array().unwrap().len(),
             1
         );
     }
@@ -331,7 +335,7 @@ mod tests {
         )
         .with_limit(1)
         .with_additional(vec!["id"]);
-        let res = client.query().get(query).await;
+        let res = client.query().get::<serde_json::Value>(query).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -351,16 +355,10 @@ mod tests {
             .with_fields(vec![
                 "wordCount {count maximum mean median minimum mode sum type}",
             ]);
-        let res = client.query().aggregate(query).await;
+        let res = client.query().aggregate::<serde_json::Value>(query).await;
         mock.assert();
         assert!(res.is_ok());
-        assert_eq!(
-            res.unwrap()["data"]["Aggregate"]["Article"]
-                .as_array()
-                .unwrap()
-                .len(),
-            1
-        );
+        assert_eq!(res.unwrap()["Article"].as_array().unwrap().len(), 1);
     }
 
     #[tokio::test]
@@ -368,7 +366,7 @@ mod tests {
         let (mut mock_server, client) = get_test_harness().await;
         let mock = mock_post(&mut mock_server, "/v1/graphql/", 422, "").await;
         let query = AggregateQuery::new("JeopardyQuestion");
-        let res = client.query().aggregate(query).await;
+        let res = client.query().aggregate::<serde_json::Value>(query).await;
         mock.assert();
         assert!(res.is_err());
     }
@@ -382,7 +380,7 @@ mod tests {
             .with_limit(1)
             .with_near_vector("{vector: [-0.36840257,0.13973749,-0.28994447]}")
             .with_fields(vec!["className"]);
-        let res = client.query().explore(query).await;
+        let res = client.query().explore::<serde_json::Value>(query).await;
         mock.assert();
         assert!(res.is_ok());
     }
@@ -391,7 +389,7 @@ mod tests {
     async fn test_explore_query_err() {
         let (_mock_server, client) = get_test_harness().await;
         let query = ExploreQuery::new();
-        let res = client.query().explore(query).await;
+        let res = client.query().explore::<serde_json::Value>(query).await;
         assert!(res.is_err());
     }
 
