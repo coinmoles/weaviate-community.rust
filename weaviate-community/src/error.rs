@@ -19,12 +19,12 @@ pub enum WeaviateError {
 impl std::fmt::Display for WeaviateError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            WeaviateError::UrlParseError(e) => write!(f, "URL parse error: {e}"),
-            WeaviateError::ReqwestError(e) => write!(f, "Reqwest error: {e}"),
-            WeaviateError::SerdeJsonError(e) => write!(f, "Serde JSON error: {e}"),
-            WeaviateError::InvalidHeaderName(e) => write!(f, "Invalid header name: {e}"),
-            WeaviateError::InvalidHeaderValue(e) => write!(f, "Invalid header value: {e}"),
-            WeaviateError::QueryError(e) => write!(f, "Query error: {e}"),
+            WeaviateError::UrlParseError(e) => write!(f, "URL parse error: {e:?}"),
+            WeaviateError::ReqwestError(e) => write!(f, "Reqwest error: {e:?}"),
+            WeaviateError::SerdeJsonError(e) => write!(f, "Serde JSON error: {e:?}"),
+            WeaviateError::InvalidHeaderName(e) => write!(f, "Invalid header name: {e:?}"),
+            WeaviateError::InvalidHeaderValue(e) => write!(f, "Invalid header value: {e:?}"),
+            WeaviateError::QueryError(e) => write!(f, "Query error: {e:?}"),
             WeaviateError::UnexpectedStatusCode {
                 url,
                 expected,
@@ -36,7 +36,7 @@ impl std::fmt::Display for WeaviateError {
                     "Unexpected status code from URL {url}: expected {expected}, got {actual}."
                 )?;
                 if let Some(reason) = reason {
-                    write!(f, " Reason: {reason:?}")?;
+                    write!(f, " Reason: {reason}")?;
                 }
                 Ok(())
             }
