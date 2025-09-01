@@ -27,7 +27,7 @@ impl<'a> Schema<'a> {
     ///
     /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
     fn endpoint(&self) -> Result<Url, url::ParseError> {
-        self.client.base_url.join("/v1/schema/")
+        self.client.base_url.join("v1/schema/")
     }
 
     /// Facilitates the retrieval of the configuration for a single class in the schema.

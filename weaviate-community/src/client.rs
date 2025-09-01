@@ -117,7 +117,7 @@ impl WeaviateClient {
     /// }
     /// ```
     pub async fn is_live(&self) -> Result<bool, WeaviateError> {
-        let endpoint = self.base_url.join("/v1/.well-known/live")?;
+        let endpoint = self.base_url.join("v1/.well-known/live")?;
         let resp = self.client.get(endpoint).send().await?;
         match resp.status() {
             reqwest::StatusCode::OK => Ok(true),
@@ -145,7 +145,7 @@ impl WeaviateClient {
     /// }
     /// ```
     pub async fn is_ready(&self) -> Result<bool, WeaviateError> {
-        let endpoint = self.base_url.join("/v1/.well-known/ready")?;
+        let endpoint = self.base_url.join("v1/.well-known/ready")?;
         let resp = self.client.get(endpoint).send().await?;
         match resp.status() {
             reqwest::StatusCode::OK => Ok(true),

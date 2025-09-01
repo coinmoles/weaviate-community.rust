@@ -29,7 +29,7 @@ impl<'a> Classification<'a> {
     ///
     /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
     fn endpoint(&self) -> Result<Url, url::ParseError> {
-        self.client.base_url.join("/v1/classifications/")
+        self.client.base_url.join("v1/classifications/")
     }
 
     /// Schedule a new classification

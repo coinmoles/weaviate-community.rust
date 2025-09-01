@@ -22,7 +22,7 @@ impl<'a> Oidc<'a> {
     ///
     /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
     fn endpoint(&self) -> Result<Url, url::ParseError> {
-        self.client.base_url.join("/v1/.well-known/")
+        self.client.base_url.join("v1/.well-known/")
     }
 
     /// Get OIDC information if OpenID Connect (OIDC) authentication is enabled. The endpoint
@@ -38,7 +38,7 @@ impl<'a> Oidc<'a> {
     /// ```
     /// ```
     pub async fn get_open_id_configuration(&self) -> Result<OidcResponse, WeaviateError> {
-        let endpoint = self.endpoint()?.join("/openid-configuration")?;
+        let endpoint = self.endpoint()?.join("openid-configuration")?;
         let res: OidcResponse = self
             .client
             .get(endpoint)

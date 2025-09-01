@@ -25,7 +25,7 @@ impl<'a> Modules<'a> {
     ///
     /// An `Err` variant should not occur as the `base_url` is validated during the `WeaviateClient` creation.
     fn endpoint(&self) -> Result<Url, url::ParseError> {
-        self.client.base_url.join("/v1/modules/")
+        self.client.base_url.join("v1/modules/")
     }
 
     /// Get a concept from text2vec-contextionary.
