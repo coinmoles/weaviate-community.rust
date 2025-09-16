@@ -5,7 +5,7 @@ use crate::{
     error::WeaviateError,
     models::query::{
         AggregateQuery, ExploreQuery, GetQuery, GraphQLAggregateResponse, GraphQLExploreResponse,
-        GraphQLGetResponse, RawQuery,
+        GraphQLGetResponse, MaybeError, RawQuery,
     },
     ResponseExt, WeaviateClient,
 };
@@ -65,7 +65,7 @@ impl<'a> Query<'a> {
     pub async fn get<T: DeserializeOwned>(&self, query: GetQuery) -> Result<T, WeaviateError> {
         let endpoint = self.endpoint()?;
         let payload = query.as_payload();
-        let res: GraphQLGetResponse<T> = self
+        let res = self
             .client
             .post(endpoint)
             .json(&payload)
@@ -73,8 +73,9 @@ impl<'a> Query<'a> {
             .await?
             .check_status(StatusCode::OK)
             .await?
-            .json()
-            .await?;
+            .json::<MaybeError<GraphQLGetResponse<T>>>()
+            .await?
+            .error_for_error()?;
         Ok(res.data.get)
     }
 
@@ -105,7 +106,7 @@ impl<'a> Query<'a> {
     ) -> Result<T, WeaviateError> {
         let endpoint = self.endpoint()?;
         let payload = query.as_payload();
-        let res: GraphQLAggregateResponse<T> = self
+        let res = self
             .client
             .post(endpoint)
             .json(&payload)
@@ -113,8 +114,9 @@ impl<'a> Query<'a> {
             .await?
             .check_status(StatusCode::OK)
             .await?
-            .json()
-            .await?;
+            .json::<MaybeError<GraphQLAggregateResponse<T>>>()
+            .await?
+            .error_for_error()?;
         Ok(res.data.aggregate)
     }
 
@@ -145,7 +147,7 @@ impl<'a> Query<'a> {
     ) -> Result<T, WeaviateError> {
         let endpoint = self.endpoint()?;
         let payload = query.as_payload()?;
-        let res: GraphQLExploreResponse<T> = self
+        let res = self
             .client
             .post(endpoint)
             .json(&payload)
@@ -153,8 +155,9 @@ impl<'a> Query<'a> {
             .await?
             .check_status(StatusCode::OK)
             .await?
-            .json()
-            .await?;
+            .json::<MaybeError<GraphQLExploreResponse<T>>>()
+            .await?
+            .error_for_error()?;
         Ok(res.data.explore)
     }
 
@@ -194,8 +197,9 @@ impl<'a> Query<'a> {
             .await?
             .check_status(StatusCode::OK)
             .await?
-            .json()
-            .await?;
+            .json::<MaybeError<serde_json::Value>>()
+            .await?
+            .error_for_error()?;
         Ok(res)
     }
 }

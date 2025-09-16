@@ -14,6 +14,7 @@ pub enum WeaviateError {
         reason: Option<String>,
     },
     BackupFailed,
+    Other(String),
 }
 
 impl std::fmt::Display for WeaviateError {
@@ -41,6 +42,7 @@ impl std::fmt::Display for WeaviateError {
                 Ok(())
             }
             WeaviateError::BackupFailed => write!(f, "Backup operation failed"),
+            WeaviateError::Other(msg) => write!(f, "Error: {msg}"),
         }
     }
 }
